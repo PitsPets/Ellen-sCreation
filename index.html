@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ellen's Creations - POS System</title>
     
+    <!-- Add a favicon to prevent the 404 error -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>">
+
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -302,7 +305,14 @@
                         switchView(currentView);
                     } else {
                         // Sign in anonymously if no other auth method is available
-                        await signInAnonymously(auth);
+                        try {
+                            await signInAnonymously(auth);
+                        } catch (error) {
+                            console.error("Anonymous sign-in failed:", error);
+                            showToast("Authentication failed. Please enable Anonymous sign-in in your Firebase project.", 'error');
+                            // Hide loading and show an error message on the main screen
+                            document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-lg">Error: Could not authenticate. Please check console and Firebase settings.</p>`;
+                        }
                     }
                 });
             } catch (error) {
