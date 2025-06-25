@@ -334,7 +334,7 @@
                         } catch (error) {
                             console.error("Anonymous sign-in failed:", error);
                             showToast("Authentication failed. Please check your Firebase settings.", 'error');
-                            document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-lg p-4"><b>Authentication Error:</b> Could not sign in. <br>Please ensure <b>Anonymous Auth</b> is enabled in your Firebase project and that your <b>Firestore Rules</b> are correctly set up to allow access.</p>`;
+                            document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-lg p-4"><b>Authentication Error:</b> Could not sign in. <br>Please ensure <b>Anonymous Auth</b> is enabled in your Firebase project and that your <b>Firestore & Storage Rules</b> are correctly set up.</p>`;
                         }
                     }
                 });
@@ -1162,3 +1162,4 @@
     </script>
 </body>
 </html>
+```
