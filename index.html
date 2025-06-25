@@ -83,6 +83,32 @@
         .file-input-label {
             cursor: pointer;
         }
+
+        /* Print-specific styles */
+        @media print {
+            body > * {
+                display: none !important;
+            }
+            #receipt-modal, #receipt-modal * {
+                display: block !important;
+                visibility: visible !important;
+            }
+            #receipt-modal {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+            .modal-content {
+                box-shadow: none !important;
+                border: 1px solid #ccc;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body class="antialiased text-gray-800">
@@ -137,10 +163,10 @@
                         <input type="number" id="product-price" required min="0" step="0.01" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Price (₱)">
                         <input type="number" id="product-stock" required min="0" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Stock Quantity">
                         <div>
-                            <label for="product-image" class="file-input-label block w-full text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                            <label for="product-image-upload" class="file-input-label block w-full text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
                                 <span id="file-name">Upload a Photo</span>
                             </label>
-                            <input type="file" id="product-image" class="file-input-hidden" accept="image/*">
+                            <input type="file" id="product-image-upload" class="file-input-hidden" accept="image/*">
                         </div>
                     </div>
                     <div class="mt-8 flex justify-end space-x-3">
@@ -200,16 +226,15 @@
             </div>
         </div>
         
-        <div id="receipt-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div id="receipt-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop no-print">
             <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-sm">
-                <div class="p-6 text-center">
-                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100">
-                        <svg class="h-10 w-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <h3 class="text-2xl font-semibold text-gray-800 mt-4">Transaction Complete!</h3>
-                    <div id="receipt-content" class="text-left my-6 text-sm max-h-64 overflow-y-auto"></div>
-                    <button id="close-receipt-modal" class="w-full px-4 py-3 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors">New Order</button>
-                </div>
+                 <div id="receipt-content-wrapper" class="p-6">
+                    <!-- Receipt content will be injected here -->
+                 </div>
+                 <div class="p-6 pt-0 flex space-x-2 no-print">
+                    <button id="print-receipt-btn" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">Print</button>
+                    <button id="close-receipt-modal" class="w-full px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors">Close</button>
+                 </div>
             </div>
         </div>
         
@@ -236,7 +261,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
         
         // --- App Configuration & State---
@@ -254,7 +279,7 @@
 
         let db, auth, storage, userId = null;
         let products = [], sales = [], customers = [];
-        let cart = []; // Now an array of simple product items
+        let cart = [];
         let currentView = 'pos';
         let productsUnsubscribe, salesUnsubscribe, customersUnsubscribe = null;
         let resolveConfirm;
@@ -328,30 +353,21 @@
                 products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 products.sort((a, b) => a.name.localeCompare(b.name));
                 renderCurrentView();
-            }, err => {
-                console.error("Product listener error:", err);
-                showToast("Error fetching products. Check Firestore rules.", 'error');
-            });
+            }, err => console.error("Product listener error:", err));
             
             const salesRef = collection(db, 'artifacts', appId, 'users', userId, 'sales');
             const salesQuery = query(salesRef, orderBy("timestamp", "desc"));
             salesUnsubscribe = onSnapshot(salesQuery, snapshot => {
                 sales = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderCurrentView();
-            }, err => {
-                console.error("Sales listener error:", err);
-                showToast("Error fetching sales. Check Firestore rules.", 'error');
-            });
+            }, err => console.error("Sales listener error:", err));
 
             const customersRef = collection(db, 'artifacts', appId, 'users', userId, 'customers');
             customersUnsubscribe = onSnapshot(customersRef, snapshot => {
                 customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 customers.sort((a,b) => a.name.localeCompare(b.name));
                 renderCurrentView();
-            }, err => {
-                console.error("Customer listener error:", err);
-                showToast("Error fetching customers. Check Firestore rules.", 'error');
-            });
+            }, err => console.error("Customer listener error:", err));
         }
 
         // --- View Rendering ---
@@ -536,16 +552,19 @@
                         <table class="w-full text-left">
                             <thead class="bg-gray-50 text-sm text-gray-600">
                                 <tr>
+                                    <th class="p-3">Sales ID</th>
                                     <th class="p-3">Date</th>
                                     <th class="p-3">Customer</th>
                                     <th class="p-3">Total</th>
                                     <th class="p-3">Status</th>
+                                    <th class="p-3">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${sales.length === 0 ? `<tr><td colspan="4" class="text-center p-8 text-gray-500">No sales records yet.</td></tr>` : ''}
+                                ${sales.length === 0 ? `<tr><td colspan="6" class="text-center p-8 text-gray-500">No sales records yet.</td></tr>` : ''}
                                 ${sales.map(s => `
                                     <tr class="border-t">
+                                        <td class="p-3 font-mono text-xs">${s.salesId || 'N/A'}</td>
                                         <td class="p-3 text-sm text-gray-500">${s.timestamp ? new Date(s.timestamp.toDate()).toLocaleString() : 'N/A'}</td>
                                         <td class="p-3 font-medium">${s.customerName || 'N/A'}</td>
                                         <td class="p-3 font-semibold">₱${s.total.toFixed(2)}</td>
@@ -558,6 +577,9 @@
                                                 <option value="Cancelled" ${s.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
                                             </select>
                                         </td>
+                                        <td class="p-3">
+                                            <button class="view-receipt-btn text-blue-600 hover:underline" data-sale-id="${s.id}">View</button>
+                                        </td>
                                     </tr>`).join('')}
                             </tbody>
                         </table>
@@ -565,6 +587,10 @@
                 </div>
             `;
             document.querySelectorAll('.status-select').forEach(sel => sel.addEventListener('change', e => handleStatusChange(e.target.dataset.saleId, e.target.value)));
+            document.querySelectorAll('.view-receipt-btn').forEach(btn => btn.addEventListener('click', e => {
+                const sale = sales.find(s => s.id === e.currentTarget.dataset.saleId);
+                if (sale) showReceipt(sale, true);
+            }));
         }
         
         // --- Core Logic & Handlers ---
@@ -601,7 +627,13 @@
             const customerId = checkoutForm.querySelector('#checkout-customer').value;
             const customerName = customers.find(c => c.id === customerId)?.name || 'Walk-in';
 
+            const today = new Date();
+            const dateString = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+            const randomId = Math.floor(1000 + Math.random() * 9000);
+            const salesId = `${dateString}-${randomId}`;
+
             const saleData = {
+                salesId: salesId,
                 items: cart,
                 total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
                 paymentMethod: checkoutForm.querySelector('#checkout-payment').value,
@@ -630,7 +662,7 @@
 
             try {
                 await batch.commit();
-                showReceipt(saleData.items, saleData.total, saleData.paymentMethod);
+                showReceipt(saleData);
                 clearCart();
                 closeModal(modals.checkout);
                 showToast('Sale completed successfully!');
@@ -651,7 +683,7 @@
             loader.classList.remove('hidden');
 
             const id = document.getElementById('product-id').value;
-            const imageFile = document.getElementById('product-image').files[0];
+            const imageFile = document.getElementById('product-image-upload').files[0];
             let imageUrl = document.getElementById('existing-image-url').value;
 
             if (imageFile) {
@@ -828,19 +860,41 @@
             openModal(modals.checkout);
         }
         
-        function showReceipt(items, total, paymentMethod) {
-            const receiptContent = document.getElementById('receipt-content');
-            receiptContent.innerHTML = `
-                ${items.map(item => `
-                    <div class="py-2 border-b border-dashed">
-                        <div class="flex justify-between">
-                            <span>${item.quantity} x ${item.name}</span>
-                            <span>₱${(item.quantity * item.price).toFixed(2)}</span>
-                        </div>
-                    </div>`).join('')}
-                <div class="flex justify-between font-bold text-lg mt-4"><span>Total</span><span>₱${total.toFixed(2)}</span></div>
-                <div class="flex justify-between text-sm mt-1"><span>Payment:</span><span>${paymentMethod}</span></div>
-                <p class="text-xs text-center text-gray-500 mt-4">Thank you for your purchase!</p>`;
+        function showReceipt(sale, isHistoricalView = false) {
+            const receiptContentWrapper = document.getElementById('receipt-content-wrapper');
+            const closeButton = document.getElementById('close-receipt-modal');
+
+            // Set the close button text based on context
+            closeButton.textContent = isHistoricalView ? "Close" : "New Order";
+            
+            // Format receipt data into HTML
+            receiptContentWrapper.innerHTML = `
+                <div class="text-center">
+                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 no-print">
+                        <svg class="h-10 w-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <h3 class="text-2xl font-semibold text-gray-800 mt-4">${isHistoricalView ? 'Transaction Details' : 'Transaction Complete!'}</h3>
+                    <p class="text-sm text-gray-500">Sales ID: ${sale.salesId || 'N/A'}</p>
+                </div>
+                <div class="text-left my-6 text-sm">
+                    <div class="border-t border-b border-dashed py-4 space-y-2">
+                        ${sale.items.map(item => `
+                            <div class="flex justify-between">
+                                <span>${item.quantity} x ${item.name}</span>
+                                <span>₱${(item.quantity * item.price).toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="flex justify-between font-bold text-lg mt-4">
+                        <span>Total</span>
+                        <span>₱${sale.total.toFixed(2)}</span>
+                    </div>
+                    <div class="flex justify-between text-sm mt-1">
+                        <span>Payment:</span><span>${sale.paymentMethod}</span>
+                    </div>
+                </div>
+                <p class="text-xs text-center text-gray-500 mt-4">Thank you for your purchase!</p>
+            `;
             openModal(modals.receipt);
         }
 
@@ -889,7 +943,11 @@
             document.getElementById('checkout-form').addEventListener('submit', e => { e.preventDefault(); handleCheckout(); });
             document.getElementById('close-receipt-modal').addEventListener('click', () => closeModal(modals.receipt));
             
-            document.getElementById('product-image').addEventListener('change', (e) => {
+            document.getElementById('print-receipt-btn').addEventListener('click', () => {
+                window.print();
+            });
+
+            document.getElementById('product-image-upload').addEventListener('change', (e) => {
                 const fileNameSpan = document.getElementById('file-name');
                 if (e.target.files && e.target.files[0]) {
                     fileNameSpan.textContent = e.target.files[0].name;
