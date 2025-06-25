@@ -87,13 +87,28 @@
             cursor: pointer;
         }
 
-        /* Print-specific styles */
+        /* Print-specific styles using a body class */
         @media print {
-            body > :not(#print-area) {
-                display: none !important;
+            body.printing * {
+                visibility: hidden;
             }
-            #print-area {
-                display: block !important;
+            body.printing #receipt-modal, 
+            body.printing #receipt-modal * {
+                visibility: visible;
+            }
+            body.printing #receipt-modal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+            }
+            body.printing .modal-content {
+                box-shadow: none !important;
+                border: none !important;
+            }
+            body.printing .no-print {
+                display: none !important;
             }
         }
     </style>
@@ -138,9 +153,6 @@
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mt-4"></div>
         </div>
         
-        <!-- Area for printing receipts. It's hidden by default. -->
-        <div id="print-area" class="hidden"></div>
-
         <!-- MODALS -->
         <div id="product-modal" class="hidden fixed inset-0 z-30 flex items-center justify-center p-4 modal-backdrop">
             <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-md">
@@ -987,18 +999,20 @@
             document.getElementById('close-receipt-modal').addEventListener('click', () => closeModal(modals.receipt));
             
             document.getElementById('print-receipt-btn').addEventListener('click', () => {
-                const receiptContent = document.getElementById('receipt-content-wrapper').innerHTML;
-                const printArea = document.getElementById('print-area');
-                printArea.innerHTML = `<div class="bg-white p-4">${receiptContent}</div>`;
+                document.body.classList.add('printing');
                 window.print();
             });
 
+            window.onafterprint = () => {
+                document.body.classList.remove('printing');
+            };
+
             document.getElementById('download-receipt-btn').addEventListener('click', () => {
                 const receiptElement = document.getElementById('receipt-content-wrapper');
-                const saleId = receiptElement.querySelector('p:nth-child(2)').textContent.split(': ')[1];
-                html2canvas(receiptElement).then(canvas => {
+                const saleId = receiptElement.querySelector('p:nth-of-type(2)').textContent.split(': ')[1];
+                html2canvas(receiptElement, { scale: 2 }).then(canvas => {
                     const link = document.createElement('a');
-                    link.download = `receipt-${saleId}.jpg`;
+                    link.download = `receipt-${saleId || 'sale'}.jpg`;
                     link.href = canvas.toDataURL('image/jpeg', 0.9);
                     link.click();
                 });
