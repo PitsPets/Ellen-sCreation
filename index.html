@@ -263,7 +263,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
         
@@ -674,34 +674,43 @@
                 timestamp: serverTimestamp()
             };
 
-            const batch = writeBatch(db);
-            
-            for (const item of cart) {
-                const productRef = doc(db, 'artifacts', appId, 'users', userId, 'products', item.productId);
-                const product = products.find(p => p.id === item.productId);
-                if (!product || product.stock < item.quantity) {
-                    showToast(`Not enough stock for ${item.name}. Checkout failed.`, 'error');
-                    return;
-                }
-                const newStock = product.stock - item.quantity;
-                batch.update(productRef, { stock: newStock });
-            }
-
-            const salesRef = collection(db, 'artifacts', appId, 'users', userId, 'sales');
-            const newSaleRef = doc(salesRef); 
-            batch.set(newSaleRef, saleData);
-            
-            saleData.id = newSaleRef.id;
-
             try {
-                await batch.commit();
+                const newSaleRef = doc(collection(db, `artifacts/${appId}/users/${userId}/sales`));
+                
+                await runTransaction(db, async (transaction) => {
+                    // 1. Read all product documents in the cart
+                    const productRefs = saleData.items.map(item => doc(db, 'artifacts', appId, 'users', userId, 'products', item.productId));
+                    const productDocs = await Promise.all(productRefs.map(ref => transaction.get(ref)));
+
+                    // 2. Validate stock for each product
+                    for(let i = 0; i < productDocs.length; i++) {
+                        const productDoc = productDocs[i];
+                        const item = saleData.items[i];
+                        if (!productDoc.exists() || productDoc.data().stock < item.quantity) {
+                            throw new Error(`Insufficient stock for ${item.name}.`);
+                        }
+                    }
+
+                    // 3. If all checks pass, perform writes
+                    for(let i = 0; i < productDocs.length; i++) {
+                        const productRef = productRefs[i];
+                        const item = saleData.items[i];
+                        const newStock = productDocs[i].data().stock - item.quantity;
+                        transaction.update(productRef, { stock: newStock });
+                    }
+                    
+                    transaction.set(newSaleRef, saleData);
+                });
+
+                saleData.id = newSaleRef.id; // Assign ID for receipt
                 showReceipt(saleData);
                 clearCart();
                 closeModal(modals.checkout);
                 showToast('Sale completed successfully!');
+
             } catch (error) {
                 console.error("Checkout failed:", error);
-                showToast("Error processing sale.", 'error');
+                showToast(error.message || "Error processing sale.", 'error');
             }
         }
         
@@ -899,7 +908,7 @@
 
             closeButton.textContent = isHistoricalView ? "Close" : "New Order";
             
-            const saleDate = sale.timestamp ? sale.timestamp.toDate() : new Date();
+            const saleDate = sale.timestamp ? (typeof sale.timestamp.toDate === 'function' ? sale.timestamp.toDate() : new Date()) : new Date();
 
             const receiptHTML = `
                 <div class="text-center p-4 border-b border-gray-200">
@@ -1000,7 +1009,10 @@
             
             document.getElementById('print-receipt-btn').addEventListener('click', () => {
                 document.body.classList.add('printing');
-                window.print();
+                // Timeout to allow styles to apply before printing
+                setTimeout(() => {
+                    window.print();
+                }, 100);
             });
 
             window.onafterprint = () => {
