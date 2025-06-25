@@ -6,7 +6,7 @@
     <title>Ellen's Creations - POS System</title>
     
     <!-- Add a favicon to prevent the 404 error -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>">
+    <link rel="icon" href="https://i.ibb.co/LzbQ8TJ/386471846-165581799940367-5700032273973764961-n-1.jpg">
 
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -123,10 +123,7 @@
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20 flex-wrap">
                     <div id="logo-container" class="flex items-center space-x-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v2a1 1 0 01-1 1h-1.172a3 3 0 00-5.656 0H4a1 1 0 01-1-1V6a1 1 0 011-1h3a1 1 0 001-1V3.5zM3.5 12a1.5 1.5 0 00-3 0V13a1 1 0 001 1v1.5a1.5 1.5 0 003 0V14a1 1 0 001-1v-1zM16.5 12a1.5 1.5 0 00-3 0V13a1 1 0 001 1v1.5a1.5 1.5 0 003 0V14a1 1 0 001-1v-1z"/>
-                            <path d="M10 8a2.5 2.5 0 00-2.5 2.5V18a2 2 0 002 2h5a2 2 0 002-2v-7.5A2.5 2.5 0 0012.5 8H10z"/>
-                        </svg>
+                        <img src="https://i.ibb.co/LzbQ8TJ/386471846-165581799940367-5700032273973764961-n-1.jpg" alt="Ellen's Creations Logo" class="h-12 object-contain">
                         <h1 class="font-pacifico text-3xl text-gray-800">Ellen's Creations</h1>
                     </div>
                     <nav class="flex space-x-1 sm:space-x-4">
@@ -159,11 +156,20 @@
                 <form id="product-form" class="p-8">
                     <h2 id="product-modal-title" class="text-2xl font-bold text-gray-800 mb-6">Add New Creation</h2>
                     <input type="hidden" id="product-id">
+                    <input type="hidden" id="existing-image-url">
                     <div class="space-y-4">
                         <input type="text" id="product-name" required class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Product Name">
                         <input type="number" id="product-price" required min="0" step="0.01" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Price (₱)">
                         <input type="number" id="product-stock" required min="0" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Stock Quantity">
-                        <input type="url" id="product-image" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Image URL (Optional)">
+                         <div class="flex items-center gap-4">
+                            <img id="image-preview" class="w-16 h-16 rounded-lg object-cover border-2 border-gray-200" src="https://placehold.co/100x100/FEFCE8/CBD5E1?text=Preview">
+                            <div class="flex-grow">
+                                <label for="product-image-upload" class="file-input-label block w-full text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                                    <span id="file-name">Upload a Photo</span>
+                                </label>
+                                <input type="file" id="product-image-upload" class="file-input-hidden" accept="image/*">
+                            </div>
+                        </div>
                     </div>
                     <div class="mt-8 flex justify-end space-x-3">
                         <button type="button" class="cancel-modal-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">Cancel</button>
@@ -259,6 +265,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
         
         // --- App Configuration & State---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pos-app';
@@ -273,7 +280,7 @@
             measurementId: "G-8WPR5J0F5M"
         };
 
-        let db, auth, userId = null;
+        let db, auth, storage, userId = null;
         let products = [], sales = [], customers = [];
         let cart = [];
         let currentView = 'pos';
@@ -312,6 +319,7 @@
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
+                storage = getStorage(app);
                 
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
