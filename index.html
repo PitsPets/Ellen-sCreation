@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ellen's Creations - POS System</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts for a custom look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom styles to apply the new theme */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FEFCE8; /* A very light yellow background */
+            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23FBBF24' fill-opacity='0.1' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+        }
+        .font-pacifico {
+            font-family: 'Pacifico', cursive;
+        }
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .tab-active {
+            border-bottom-color: #F59E0B; /* Amber-500 for better contrast */
+            color: #F59E0B;
+            font-weight: 600;
+        }
+        .tab-inactive {
+            border-bottom-color: transparent;
+            color: #6B7280; /* Gray-500 */
+        }
+        .modal-content {
+            transform: scale(0.95);
+            opacity: 0;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+        }
+        .modal-visible .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        /* Custom scrollbar for a nicer look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FEF3C7; /* Yellow-200 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #FBBF24; /* Yellow-400 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #F59E0B; /* Amber-500 */
+        }
+        .status-select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="%236B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l4 4 4-4"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1em;
+            padding-right: 2rem;
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+
+    <!-- Main Application Container -->
+    <div id="app" class="min-h-screen">
+        
+        <!-- Header -->
+        <header class="bg-white/80 backdrop-blur-sm shadow-md sticky top-0 z-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-20">
+                    <div class="flex items-center space-x-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v2a1 1 0 01-1 1h-1.172a3 3 0 00-5.656 0H4a1 1 0 01-1-1V6a1 1 0 011-1h3a1 1 0 001-1V3.5zM3.5 12a1.5 1.5 0 00-3 0V13a1 1 0 001 1v1.5a1.5 1.5 0 003 0V14a1 1 0 001-1v-1zM16.5 12a1.5 1.5 0 00-3 0V13a1 1 0 001 1v1.5a1.5 1.5 0 003 0V14a1 1 0 001-1v-1z"/>
+                            <path d="M10 8a2.5 2.5 0 00-2.5 2.5V18a2 2 0 002 2h5a2 2 0 002-2v-7.5A2.5 2.5 0 0012.5 8H10z"/>
+                        </svg>
+                        <h1 class="font-pacifico text-3xl text-gray-800">Ellen's Creations</h1>
+                    </div>
+                    <nav class="flex space-x-1 sm:space-x-4">
+                        <button id="nav-pos" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">POS</button>
+                        <button id="nav-inventory" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Inventory</button>
+                        <button id="nav-customers" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Customers</button>
+                        <button id="nav-reports" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Reports</button>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="hidden container mx-auto p-4 sm:p-6 lg:p-8">
+            <div id="pos-view" class="hidden"></div>
+            <div id="inventory-view" class="hidden"></div>
+            <div id="customers-view" class="hidden"></div>
+            <div id="reports-view" class="hidden"></div>
+        </main>
+        
+        <!-- Loading State -->
+        <div id="loading-state" class="text-center py-20">
+            <p class="text-yellow-600 text-lg">Loading your beautiful creations...</p>
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mt-4"></div>
+        </div>
+
+        <!-- MODALS -->
+        <div id="product-modal" class="hidden fixed inset-0 z-30 flex items-center justify-center p-4 modal-backdrop">
+            <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-md">
+                <form id="product-form" class="p-8">
+                    <h2 id="product-modal-title" class="text-2xl font-bold text-gray-800 mb-6">Add New Creation</h2>
+                    <input type="hidden" id="product-id">
+                    <div class="space-y-4">
+                        <input type="text" id="product-name" required class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Product Name">
+                        <input type="number" id="product-price" required min="0" step="0.01" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Price (₱)">
+                        <input type="number" id="product-stock" required min="0" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Stock Quantity">
+                        <input type="url" id="product-image" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Image URL (Optional)">
+                        <div class="flex items-center">
+                            <input id="product-customizable" type="checkbox" class="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded">
+                            <label for="product-customizable" class="ml-2 block text-sm text-gray-900">Customizable Item</label>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex justify-end space-x-3">
+                        <button type="button" class="cancel-modal-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors">Save Product</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="customer-modal" class="hidden fixed inset-0 z-30 flex items-center justify-center p-4 modal-backdrop">
+            <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-md">
+                <form id="customer-form" class="p-8">
+                    <h2 id="customer-modal-title" class="text-2xl font-bold text-gray-800 mb-6">Add New Customer</h2>
+                    <input type="hidden" id="customer-id">
+                    <div class="space-y-4">
+                        <input type="text" id="customer-name" required class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Full Name">
+                        <input type="email" id="customer-email" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Email Address">
+                        <input type="tel" id="customer-phone" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Phone Number">
+                    </div>
+                    <div class="mt-8 flex justify-end space-x-3">
+                        <button type="button" class="cancel-modal-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500">Save Customer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div id="customization-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 modal-backdrop">
+            <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+                <form id="customization-form" class="p-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Customize Barong</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2">
+                        <select id="custom-fabric" class="w-full border-gray-300 rounded-lg shadow-sm" required><option value="">Select Fabric</option><option>Piña</option><option>Jusi</option><option>Organza</option></select>
+                        <select id="custom-embroidery" class="w-full border-gray-300 rounded-lg shadow-sm" required><option value="">Select Embroidery</option><option>Calado</option><option>Full-Front</option><option>Minimalist</option></select>
+                        <input type="number" step="0.1" id="custom-shoulder" class="w-full border-gray-300 rounded-lg shadow-sm" placeholder="Shoulder (in)">
+                        <input type="number" step="0.1" id="custom-chest" class="w-full border-gray-300 rounded-lg shadow-sm" placeholder="Chest (in)">
+                        <input type="number" step="0.1" id="custom-waist" class="w-full border-gray-300 rounded-lg shadow-sm" placeholder="Waist (in)">
+                        <input type="number" step="0.1" id="custom-length" class="w-full border-gray-300 rounded-lg shadow-sm" placeholder="Sleeve Length (in)">
+                        <textarea id="custom-notes" class="md:col-span-2 w-full border-gray-300 rounded-lg shadow-sm" placeholder="Special Instructions..."></textarea>
+                    </div>
+                    <div class="mt-8 flex justify-end space-x-3">
+                        <button type="button" class="cancel-modal-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500">Add to Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="checkout-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 modal-backdrop">
+            <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+                <form id="checkout-form" class="p-8">
+                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Finalize Order</h2>
+                     <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Customer</label>
+                            <select id="checkout-customer" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm"><option value="">Select Customer</option></select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Payment Method</label>
+                            <select id="checkout-payment" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm">
+                                <option>Cash</option><option>GCash</option><option>Credit Card</option><option>Bank Transfer</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Order Notes</label>
+                            <textarea id="checkout-notes" class="mt-1 w-full border-gray-300 rounded-lg shadow-sm"></textarea>
+                        </div>
+                     </div>
+                     <div class="mt-8 flex justify-end space-x-3">
+                        <button type="button" class="cancel-modal-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
+                        <button type="submit" id="confirm-checkout-btn" class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Confirm Sale</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div id="receipt-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+            <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+                <div class="p-6 text-center">
+                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100">
+                        <svg class="h-10 w-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <h3 class="text-2xl font-semibold text-gray-800 mt-4">Transaction Complete!</h3>
+                    <div id="receipt-content" class="text-left my-6 text-sm max-h-64 overflow-y-auto"></div>
+                    <button id="close-receipt-modal" class="w-full px-4 py-3 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors">New Order</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+            <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100">
+                     <svg class="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                </div>
+                <h3 id="confirm-modal-title" class="text-xl font-semibold text-gray-800 mt-4">Are you sure?</h3>
+                <p id="confirm-modal-text" class="text-gray-600 my-2">This action cannot be undone.</p>
+                <div class="mt-6 flex justify-center space-x-3">
+                    <button id="confirm-modal-cancel" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
+                    <button id="confirm-modal-confirm" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast-notification" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-3 px-5 rounded-lg shadow-xl transition-opacity duration-300">
+            <p id="toast-message"></p>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        
+        // --- App Configuration & State---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pos-app';
+        
+        // Firebase configuration provided by the user
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzq9xJvubPS3u3-FW9EamNfZMt-8BDmzE",
+            authDomain: "ellen-s-creation.firebaseapp.com",
+            projectId: "ellen-s-creation",
+            storageBucket: "ellen-s-creation.appspot.com",
+            messagingSenderId: "497462015691",
+            appId: "1:497462015691:web:52ac68f784171151d8cd4e",
+            measurementId: "G-8WPR5J0F5M"
+        };
+
+        let db, auth, userId = null;
+        let products = [], sales = [], customers = [];
+        let cart = []; // Array of cart items { productId, name, price, quantity, customizations }
+        let currentView = 'pos';
+        let productsUnsubscribe, salesUnsubscribe, customersUnsubscribe = null;
+        let resolveConfirm;
+
+        // --- UI Element Groups ---
+        const views = {
+            pos: document.getElementById('pos-view'),
+            inventory: document.getElementById('inventory-view'),
+            customers: document.getElementById('customers-view'),
+            reports: document.getElementById('reports-view'),
+        };
+        const navTabs = {
+            pos: document.getElementById('nav-pos'),
+            inventory: document.getElementById('nav-inventory'),
+            customers: document.getElementById('nav-customers'),
+            reports: document.getElementById('nav-reports'),
+        };
+        const modals = {
+            product: document.getElementById('product-modal'),
+            customer: document.getElementById('customer-modal'),
+            customization: document.getElementById('customization-modal'),
+            checkout: document.getElementById('checkout-modal'),
+            receipt: document.getElementById('receipt-modal'),
+            confirm: document.getElementById('confirm-modal')
+        };
+        
+        // --- Firebase Initialization and Auth ---
+        async function initializeFirebase() {
+            if (!firebaseConfig || !firebaseConfig.projectId) {
+                showToast("Firebase configuration is missing or invalid.", 'error');
+                return;
+            }
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        await setupDataListeners();
+                        document.getElementById('loading-state').classList.add('hidden');
+                        document.getElementById('main-content').classList.remove('hidden');
+                        switchView(currentView);
+                    } else {
+                        // Sign in anonymously if no other auth method is available
+                        await signInAnonymously(auth);
+                    }
+                });
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+                showToast("Could not connect to the database.", 'error');
+            }
+        }
+        
+        // --- Data Listeners ---
+        async function setupDataListeners() {
+            if (!userId) return;
+
+            if (productsUnsubscribe) productsUnsubscribe();
+            if (salesUnsubscribe) salesUnsubscribe();
+            if (customersUnsubscribe) customersUnsubscribe();
+
+            const productsRef = collection(db, 'artifacts', appId, 'users', userId, 'products');
+            productsUnsubscribe = onSnapshot(productsRef, snapshot => {
+                products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                products.sort((a, b) => a.name.localeCompare(b.name));
+                renderCurrentView();
+            }, err => console.error("Product listener error:", err));
+            
+            const salesRef = collection(db, 'artifacts', appId, 'users', userId, 'sales');
+            const salesQuery = query(salesRef, orderBy("timestamp", "desc"));
+            salesUnsubscribe = onSnapshot(salesQuery, snapshot => {
+                sales = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderCurrentView();
+            }, err => console.error("Sales listener error:", err));
+
+            const customersRef = collection(db, 'artifacts', appId, 'users', userId, 'customers');
+            customersUnsubscribe = onSnapshot(customersRef, snapshot => {
+                customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                customers.sort((a,b) => a.name.localeCompare(b.name));
+                renderCurrentView();
+            }, err => console.error("Customer listener error:", err));
+        }
+
+        // --- View Rendering ---
+        function renderCurrentView() {
+            if (!userId) return;
+            switch(currentView) {
+                case 'pos': renderPosView(); break;
+                case 'inventory': renderInventoryView(); break;
+                case 'customers': renderCustomersView(); break;
+                case 'reports': renderReportsView(); break;
+            }
+        }
+
+        function renderPosView() {
+            views.pos.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2">
+                        <h2 class="text-2xl font-bold mb-4 text-gray-700">Choose a Creation</h2>
+                        <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                            ${products.length === 0 ? `<div class="col-span-full text-center py-10 bg-white/50 rounded-lg"><p class="text-gray-500">No creations found. Add some in the Inventory tab!</p></div>` : ''}
+                            ${products.map(p => `
+                                <div class="product-card bg-white rounded-xl shadow-md overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer ${p.stock <= 0 ? 'opacity-50 grayscale cursor-not-allowed' : ''}" data-id="${p.id}">
+                                    <img src="${p.image || `https://placehold.co/400x300/FBBF24/000000?text=${encodeURIComponent(p.name)}`}" alt="${p.name}" class="h-32 w-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/400x300/FBBF24/000000?text=Error';">
+                                    <div class="p-4">
+                                        <h3 class="font-semibold truncate">${p.name}</h3>
+                                        <p class="text-yellow-600 font-bold">₱${p.price.toFixed(2)}</p>
+                                        <p class="text-xs text-gray-500">Stock: ${p.stock}</p>
+                                        ${p.customizable ? `<span class="text-xs font-semibold text-yellow-800 bg-yellow-100 px-2 py-1 rounded-full mt-1 inline-block">Customizable</span>` : ''}
+                                    </div>
+                                </div>`).join('')}
+                        </div>
+                    </div>
+                    <div id="cart-container" class="bg-white p-6 rounded-2xl shadow-lg h-fit sticky top-28"></div>
+                </div>`;
+            renderCart();
+            views.pos.querySelectorAll('.product-card').forEach(card => {
+                const product = products.find(p => p.id === card.dataset.id);
+                if (product && product.stock > 0) {
+                    card.addEventListener('click', () => handleProductClick(product.id));
+                }
+            });
+        }
+        
+        function renderCart() {
+            const cartContainer = document.getElementById('cart-container');
+            if (!cartContainer) return;
+
+            let subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const total = subtotal;
+
+            cartContainer.innerHTML = `
+                <h2 class="text-2xl font-bold mb-4 text-gray-700">Current Order</h2>
+                <div id="cart-items" class="space-y-3 mb-4 pr-2 max-h-64 overflow-y-auto">
+                    ${cart.length === 0 ? `<p class="text-gray-500 text-center py-4">Your cart is empty</p>` : ''}
+                    ${cart.map((item, index) => `
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="font-semibold">${item.name}</p>
+                                <p class="text-sm text-gray-500">₱${item.price.toFixed(2)} x ${item.quantity}</p>
+                                ${item.customizations ? `<button class="view-details-btn text-xs text-yellow-600 hover:underline" data-index="${index}">View Details</button>` : ''}
+                            </div>
+                            <button class="cart-remove-btn text-red-500 hover:text-red-700 p-1" data-index="${index}">
+                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>`).join('')}
+                </div>
+                <div class="border-t pt-4 space-y-2">
+                    <div class="flex justify-between font-bold text-lg"><span>Total</span><span>₱${total.toFixed(2)}</span></div>
+                </div>
+                <div class="mt-6 flex space-x-2">
+                    <button id="clear-cart-btn" class="w-full py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 ${cart.length === 0 ? 'opacity-50' : ''}" ${cart.length === 0 ? 'disabled' : ''}>Clear</button>
+                    <button id="checkout-btn" class="w-full py-3 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 ${cart.length === 0 ? 'opacity-50' : ''}" ${cart.length === 0 ? 'disabled' : ''}>Checkout</button>
+                </div>`;
+            
+            cartContainer.querySelector('#clear-cart-btn')?.addEventListener('click', clearCart);
+            cartContainer.querySelector('#checkout-btn')?.addEventListener('click', openCheckoutModal);
+            cartContainer.querySelectorAll('.cart-remove-btn').forEach(btn => btn.addEventListener('click', e => removeFromCart(parseInt(e.currentTarget.dataset.index))));
+            cartContainer.querySelectorAll('.view-details-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    const item = cart[parseInt(e.currentTarget.dataset.index)];
+                    const details = Object.entries(item.customizations)
+                        .map(([key, value]) => value ? `${key}: ${value}` : null)
+                        .filter(Boolean)
+                        .join('\n');
+                    alert(`Customization Details:\n\n${details}`);
+                });
+            });
+        }
+        
+        function renderInventoryView() { 
+            views.inventory.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-700">Inventory Management</h2>
+                    <button id="add-product-btn" class="bg-yellow-400 text-black px-5 py-2 rounded-lg hover:bg-yellow-500 flex items-center space-x-2 shadow hover:shadow-lg transition-shadow">
+                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                        <span>Add Product</span>
+                    </button>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="p-4 font-semibold text-gray-600">Product</th>
+                                    <th class="p-4 font-semibold text-gray-600">Price</th>
+                                    <th class="p-4 font-semibold text-gray-600">Stock</th>
+                                    <th class="p-4 font-semibold text-gray-600">Type</th>
+                                    <th class="p-4 font-semibold text-gray-600 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${products.length === 0 ? `<tr><td colspan="5" class="text-center p-8 text-gray-500">No products in inventory.</td></tr>` : ''}
+                                ${products.map(p => `
+                                    <tr class="border-b border-gray-200 last:border-b-0 hover:bg-yellow-50/50">
+                                        <td class="p-4 flex items-center space-x-3">
+                                            <img src="${p.image || `https://placehold.co/100x100/FBBF24/000000?text=${encodeURIComponent(p.name[0])}`}" class="h-10 w-10 rounded-md object-cover">
+                                            <span class="font-medium">${p.name}</span>
+                                        </td>
+                                        <td class="p-4">₱${p.price.toFixed(2)}</td>
+                                        <td class="p-4">${p.stock}</td>
+                                        <td class="p-4">
+                                            <span class="text-xs font-semibold px-2 py-1 rounded-full ${p.customizable ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'}">
+                                                ${p.customizable ? 'Custom' : 'Standard'}
+                                            </span>
+                                        </td>
+                                        <td class="p-4 space-x-2 text-right">
+                                            <button class="edit-product-btn p-2 rounded-md hover:bg-gray-200 transition-colors" data-id="${p.id}" title="Edit"><svg class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                                            <button class="delete-product-btn p-2 rounded-md hover:bg-gray-200 transition-colors" data-id="${p.id}" title="Delete"><svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            document.getElementById('add-product-btn').addEventListener('click', () => openProductModal());
+            document.querySelectorAll('.edit-product-btn').forEach(btn => btn.addEventListener('click', e => openProductModal(e.currentTarget.dataset.id)));
+            document.querySelectorAll('.delete-product-btn').forEach(btn => btn.addEventListener('click', e => handleDeleteProduct(e.currentTarget.dataset.id)));
+        }
+
+        function renderCustomersView() {
+            views.customers.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-700">Customer Management</h2>
+                    <button id="add-customer-btn" class="bg-yellow-400 text-black px-5 py-2 rounded-lg hover:bg-yellow-500 flex items-center space-x-2 shadow hover:shadow-lg transition-shadow">
+                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 11a1 1 0 100-2 1 1 0 000 2z"/></svg>
+                        <span>Add Customer</span>
+                    </button>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                             <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="p-4 font-semibold text-gray-600">Name</th>
+                                    <th class="p-4 font-semibold text-gray-600">Email</th>
+                                    <th class="p-4 font-semibold text-gray-600">Phone</th>
+                                    <th class="p-4 font-semibold text-gray-600 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${customers.length === 0 ? `<tr><td colspan="4" class="text-center p-8 text-gray-500">No customers saved yet.</td></tr>` : ''}
+                                ${customers.map(c => `
+                                    <tr class="border-b border-gray-200 last:border-b-0 hover:bg-yellow-50/50">
+                                        <td class="p-4 font-medium">${c.name}</td>
+                                        <td class="p-4 text-gray-600">${c.email || 'N/A'}</td>
+                                        <td class="p-4 text-gray-600">${c.phone || 'N/A'}</td>
+                                        <td class="p-4 space-x-2 text-right">
+                                            <button class="edit-customer-btn p-2 rounded-md hover:bg-gray-200" data-id="${c.id}" title="Edit"><svg class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                                            <button class="delete-customer-btn p-2 rounded-md hover:bg-gray-200" data-id="${c.id}" title="Delete"><svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            document.getElementById('add-customer-btn').addEventListener('click', () => openCustomerModal());
+            document.querySelectorAll('.edit-customer-btn').forEach(btn => btn.addEventListener('click', e => openCustomerModal(e.currentTarget.dataset.id)));
+            document.querySelectorAll('.delete-customer-btn').forEach(btn => btn.addEventListener('click', e => handleDeleteCustomer(e.currentTarget.dataset.id)));
+        }
+
+        function renderReportsView() {
+            const totalRevenue = sales.reduce((sum, sale) => sum + sale.total, 0);
+            
+            views.reports.innerHTML = `
+                <h2 class="text-2xl font-bold mb-6 text-gray-700">Sales Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-sm font-medium text-gray-500">Total Revenue</h3><p class="text-3xl font-bold text-yellow-500 mt-1">₱${totalRevenue.toFixed(2)}</p></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-sm font-medium text-gray-500">Total Sales</h3><p class="text-3xl font-bold text-yellow-500 mt-1">${sales.length}</p></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-sm font-medium text-gray-500">Pending Orders</h3><p class="text-3xl font-bold text-yellow-500 mt-1">${sales.filter(s => s.status === 'Pending').length}</p></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-sm font-medium text-gray-500">In Production</h3><p class="text-3xl font-bold text-yellow-500 mt-1">${sales.filter(s => s.status === 'In Production').length}</p></div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <h3 class="p-4 text-lg font-semibold text-gray-700 border-b">Order History & Status</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-50 text-sm text-gray-600">
+                                <tr>
+                                    <th class="p-3">Date</th>
+                                    <th class="p-3">Customer</th>
+                                    <th class="p-3">Total</th>
+                                    <th class="p-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${sales.length === 0 ? `<tr><td colspan="4" class="text-center p-8 text-gray-500">No sales records yet.</td></tr>` : ''}
+                                ${sales.map(s => `
+                                    <tr class="border-t">
+                                        <td class="p-3 text-sm text-gray-500">${s.timestamp ? new Date(s.timestamp.toDate()).toLocaleString() : 'N/A'}</td>
+                                        <td class="p-3 font-medium">${s.customerName || 'N/A'}</td>
+                                        <td class="p-3 font-semibold">₱${s.total.toFixed(2)}</td>
+                                        <td class="p-3">
+                                            <select class="status-select text-sm rounded-md border-gray-300 shadow-sm focus:border-yellow-300 focus:ring focus:ring-yellow-200 focus:ring-opacity-50" data-sale-id="${s.id}">
+                                                <option value="Pending" ${s.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                                <option value="In Production" ${s.status === 'In Production' ? 'selected' : ''}>In Production</option>
+                                                <option value="Completed" ${s.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                                                <option value="Shipped" ${s.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                                                <option value="Cancelled" ${s.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                            </select>
+                                        </td>
+                                    </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            document.querySelectorAll('.status-select').forEach(sel => sel.addEventListener('change', e => handleStatusChange(e.target.dataset.saleId, e.target.value)));
+        }
+        
+        // --- Core Logic & Handlers ---
+
+        function handleProductClick(productId) {
+            const product = products.find(p => p.id === productId);
+            if(product.customizable) {
+                openCustomizationModal(productId);
+            } else {
+                addToCart({ productId, name: product.name, price: product.price, quantity: 1, customizations: null });
+            }
+        }
+
+        function addToCart(item) {
+            const product = products.find(p => p.id === item.productId);
+            const stockInCart = cart.filter(cartItem => cartItem.productId === item.productId).reduce((sum, i) => sum + i.quantity, 0);
+            
+            if (product.stock > stockInCart) {
+                cart.push(item);
+                renderCart();
+            } else {
+                showToast("No more stock available for this item.", 'error');
+            }
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        function clearCart() {
+            cart = [];
+            renderCart();
+        }
+
+        async function handleCheckout() {
+            const checkoutForm = document.getElementById('checkout-form');
+            const customerId = checkoutForm.querySelector('#checkout-customer').value;
+            const customerName = customers.find(c => c.id === customerId)?.name || 'Walk-in';
+
+            const saleData = {
+                items: cart,
+                total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                paymentMethod: checkoutForm.querySelector('#checkout-payment').value,
+                notes: checkoutForm.querySelector('#checkout-notes').value,
+                status: 'Pending',
+                customerId,
+                customerName,
+                timestamp: serverTimestamp()
+            };
+
+            const batch = writeBatch(db);
+            
+            for (const item of cart) {
+                const productRef = doc(db, 'artifacts', appId, 'users', userId, 'products', item.productId);
+                const product = products.find(p => p.id === item.productId);
+                if (!product || product.stock < item.quantity) {
+                    showToast(`Not enough stock for ${item.name}. Checkout failed.`, 'error');
+                    return;
+                }
+                const newStock = product.stock - item.quantity;
+                batch.update(productRef, { stock: newStock });
+            }
+
+            const salesRef = collection(db, 'artifacts', appId, 'users', userId, 'sales');
+            batch.set(doc(salesRef), saleData);
+
+            try {
+                await batch.commit();
+                showReceipt(saleData.items, saleData.total, saleData.paymentMethod);
+                clearCart();
+                closeModal(modals.checkout);
+                showToast('Sale completed successfully!');
+            } catch (error) {
+                console.error("Checkout failed:", error);
+                showToast("Error processing sale.", 'error');
+            }
+        }
+        
+        async function handleProductFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('product-id').value;
+            const productData = {
+                name: document.getElementById('product-name').value.trim(),
+                price: parseFloat(document.getElementById('product-price').value),
+                stock: parseInt(document.getElementById('product-stock').value),
+                image: document.getElementById('product-image').value.trim(),
+                customizable: document.getElementById('product-customizable').checked,
+            };
+
+            if (!productData.name || isNaN(productData.price) || isNaN(productData.stock)) {
+                showToast("Please fill all required fields correctly.", "error");
+                return;
+            }
+
+            try {
+                if (id) {
+                    const productRef = doc(db, 'artifacts', appId, 'users', userId, 'products', id);
+                    await updateDoc(productRef, productData);
+                    showToast('Product updated successfully!');
+                } else {
+                    const productsRef = collection(db, 'artifacts', appId, 'users', userId, 'products');
+                    await addDoc(productsRef, productData);
+                    showToast('Product added successfully!');
+                }
+                closeModal(modals.product);
+            } catch (error) {
+                console.error("Error saving product:", error);
+                showToast('Failed to save product.', 'error');
+            }
+        }
+
+        async function handleDeleteProduct(id) {
+            const confirmed = await showConfirmModal('Delete Product?', 'This will permanently delete this product. This action cannot be undone.');
+            if (confirmed) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'products', id));
+                    showToast('Product deleted.');
+                } catch (error) {
+                    console.error("Error deleting product:", error);
+                    showToast('Failed to delete product.', 'error');
+                }
+            }
+        }
+
+        async function handleCustomerFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('customer-id').value;
+            const customerData = {
+                name: document.getElementById('customer-name').value.trim(),
+                email: document.getElementById('customer-email').value.trim(),
+                phone: document.getElementById('customer-phone').value.trim(),
+            };
+
+            if (!customerData.name) {
+                showToast("Customer name is required.", "error");
+                return;
+            }
+
+            try {
+                if (id) {
+                    const customerRef = doc(db, 'artifacts', appId, 'users', userId, 'customers', id);
+                    await updateDoc(customerRef, customerData);
+                    showToast('Customer updated!');
+                } else {
+                    const customersRef = collection(db, 'artifacts', appId, 'users', userId, 'customers');
+                    await addDoc(customersRef, customerData);
+                    showToast('Customer added!');
+                }
+                closeModal(modals.customer);
+            } catch (error) {
+                console.error("Error saving customer:", error);
+                showToast('Failed to save customer.', 'error');
+            }
+        }
+        
+        async function handleDeleteCustomer(id) {
+            const confirmed = await showConfirmModal('Delete Customer?', 'This will permanently delete this customer.');
+            if (confirmed) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id));
+                    showToast('Customer deleted.');
+                } catch (error) {
+                    console.error("Error deleting customer:", error);
+                    showToast('Failed to delete customer.', 'error');
+                }
+            }
+        }
+
+        async function handleStatusChange(saleId, newStatus) {
+            const saleRef = doc(db, 'artifacts', appId, 'users', userId, 'sales', saleId);
+            try {
+                await updateDoc(saleRef, { status: newStatus });
+                showToast(`Order status updated to "${newStatus}".`);
+            } catch (error) {
+                console.error("Error updating status:", error);
+                showToast('Failed to update status.', 'error');
+            }
+        }
+
+        function handleCustomizationFormSubmit(e) {
+            e.preventDefault();
+            const form = e.target;
+            const productId = form.dataset.productId;
+            const product = products.find(p => p.id === productId);
+            const customizations = {
+                Fabric: form.querySelector('#custom-fabric').value,
+                Embroidery: form.querySelector('#custom-embroidery').value,
+                Shoulder: form.querySelector('#custom-shoulder').value,
+                Chest: form.querySelector('#custom-chest').value,
+                Waist: form.querySelector('#custom-waist').value,
+                Length: form.querySelector('#custom-length').value,
+                Notes: form.querySelector('#custom-notes').value,
+            };
+            addToCart({ productId, name: product.name, price: product.price, quantity: 1, customizations });
+            closeModal(modals.customization);
+        }
+
+        // --- Modal & UI Helpers ---
+        function openModal(modal) { modal.classList.remove('hidden'); setTimeout(() => modal.classList.add('modal-visible'), 10); }
+        function closeModal(modal) { modal.classList.remove('modal-visible'); setTimeout(() => modal.classList.add('hidden'), 300); }
+
+        function openProductModal(productId = null) {
+            const form = document.getElementById('product-form');
+            form.reset();
+            form.querySelector('#product-id').value = '';
+            document.getElementById('product-modal-title').textContent = "Add New Creation";
+            if (productId) {
+                const product = products.find(p => p.id === productId);
+                if (product) {
+                    document.getElementById('product-modal-title').textContent = "Edit Creation";
+                    form.querySelector('#product-id').value = productId;
+                    form.querySelector('#product-name').value = product.name;
+                    form.querySelector('#product-price').value = product.price;
+                    form.querySelector('#product-stock').value = product.stock;
+                    form.querySelector('#product-image').value = product.image || '';
+                    form.querySelector('#product-customizable').checked = product.customizable || false;
+                }
+            }
+            openModal(modals.product);
+        }
+
+        function openCustomerModal(customerId = null) {
+            const form = document.getElementById('customer-form');
+            form.reset();
+            form.querySelector('#customer-id').value = '';
+            document.getElementById('customer-modal-title').textContent = "Add New Customer";
+            if (customerId) {
+                const customer = customers.find(c => c.id === customerId);
+                if (customer) {
+                    document.getElementById('customer-modal-title').textContent = "Edit Customer";
+                    form.querySelector('#customer-id').value = customerId;
+                    form.querySelector('#customer-name').value = customer.name;
+                    form.querySelector('#customer-email').value = customer.email || '';
+                    form.querySelector('#customer-phone').value = customer.phone || '';
+                }
+            }
+            openModal(modals.customer);
+        }
+
+        function openCustomizationModal(productId) {
+            const form = document.getElementById('customization-form');
+            form.reset();
+            form.dataset.productId = productId;
+            openModal(modals.customization);
+        }
+        
+        function openCheckoutModal() {
+            if (cart.length === 0) return;
+            const select = document.getElementById('checkout-customer');
+            select.innerHTML = `<option value="">Walk-in Customer</option>` + 
+                               customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            openModal(modals.checkout);
+        }
+        
+        function showReceipt(items, total, paymentMethod) {
+            const receiptContent = document.getElementById('receipt-content');
+            receiptContent.innerHTML = `
+                ${items.map(item => `
+                    <div class="py-2 border-b border-dashed">
+                        <div class="flex justify-between">
+                            <span>${item.quantity} x ${item.name}</span>
+                            <span>₱${(item.quantity * item.price).toFixed(2)}</span>
+                        </div>
+                        ${item.customizations ? `<div class="text-xs text-gray-500 pl-2 whitespace-pre-wrap">${Object.entries(item.customizations).map(([k,v]) => v ? `${k}: ${v}`:null).filter(Boolean).join('\n')}</div>` : ''}
+                    </div>`).join('')}
+                <div class="flex justify-between font-bold text-lg mt-4"><span>Total</span><span>₱${total.toFixed(2)}</span></div>
+                <div class="flex justify-between text-sm mt-1"><span>Payment:</span><span>${paymentMethod}</span></div>
+                <p class="text-xs text-center text-gray-500 mt-4">Thank you for your purchase!</p>`;
+            openModal(modals.receipt);
+        }
+
+        function showConfirmModal(title, text) {
+            return new Promise((resolve) => {
+                resolveConfirm = resolve;
+                document.getElementById('confirm-modal-title').textContent = title;
+                document.getElementById('confirm-modal-text').textContent = text;
+                openModal(modals.confirm);
+            });
+        }
+        
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast-notification');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.textContent = message;
+            toast.className = `fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl transition-all duration-300 ${type === 'error' ? 'bg-red-500' : 'bg-green-500'}`;
+            toast.classList.remove('hidden', 'opacity-0');
+            toast.classList.add('opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3000);
+        }
+        
+        function switchView(viewName) {
+            currentView = viewName;
+            Object.values(views).forEach(v => v.classList.add('hidden'));
+            Object.values(navTabs).forEach(t => t.classList.remove('tab-active', 'font-semibold'));
+            Object.values(navTabs).forEach(t => t.classList.add('tab-inactive'));
+
+            views[viewName].classList.remove('hidden');
+            navTabs[viewName].classList.add('tab-active');
+            navTabs[viewName].classList.remove('tab-inactive');
+            renderCurrentView();
+        }
+
+        // --- Initial Load & Event Listeners ---
+        function setupEventListeners() {
+            Object.keys(navTabs).forEach(key => navTabs[key].addEventListener('click', () => switchView(key)));
+            document.querySelectorAll('.cancel-modal-btn').forEach(btn => btn.addEventListener('click', (e) => closeModal(e.target.closest('.modal-backdrop'))));
+
+            document.getElementById('product-form').addEventListener('submit', handleProductFormSubmit);
+            document.getElementById('customer-form').addEventListener('submit', handleCustomerFormSubmit);
+            document.getElementById('customization-form').addEventListener('submit', handleCustomizationFormSubmit);
+            document.getElementById('checkout-form').addEventListener('submit', e => { e.preventDefault(); handleCheckout(); });
+            document.getElementById('close-receipt-modal').addEventListener('click', () => closeModal(modals.receipt));
+
+            document.getElementById('confirm-modal-cancel').addEventListener('click', () => { closeModal(modals.confirm); if (resolveConfirm) resolveConfirm(false); });
+            document.getElementById('confirm-modal-confirm').addEventListener('click', () => { closeModal(modals.confirm); if (resolveConfirm) resolveConfirm(true); });
+        }
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeFirebase();
+            setupEventListeners();
+        });
+    </script>
+</body>
+</html>
