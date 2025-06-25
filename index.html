@@ -71,6 +71,18 @@
             background-size: 1em;
             padding-right: 2rem;
         }
+        /* Hide default file input */
+        .file-input-hidden {
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            position: absolute;
+            z-index: -1;
+        }
+        .file-input-label {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="antialiased text-gray-800">
@@ -81,7 +93,7 @@
         <!-- Header -->
         <header class="bg-white/80 backdrop-blur-sm shadow-md sticky top-0 z-20">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-20">
+                <div class="flex items-center justify-between h-20 flex-wrap">
                     <div class="flex items-center space-x-4">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v2a1 1 0 01-1 1h-1.172a3 3 0 00-5.656 0H4a1 1 0 01-1-1V6a1 1 0 011-1h3a1 1 0 001-1V3.5zM3.5 12a1.5 1.5 0 00-3 0V13a1 1 0 001 1v1.5a1.5 1.5 0 003 0V14a1 1 0 001-1v-1zM16.5 12a1.5 1.5 0 00-3 0V13a1 1 0 001 1v1.5a1.5 1.5 0 003 0V14a1 1 0 001-1v-1z"/>
@@ -119,19 +131,24 @@
                 <form id="product-form" class="p-8">
                     <h2 id="product-modal-title" class="text-2xl font-bold text-gray-800 mb-6">Add New Creation</h2>
                     <input type="hidden" id="product-id">
+                    <input type="hidden" id="existing-image-url">
                     <div class="space-y-4">
                         <input type="text" id="product-name" required class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Product Name">
                         <input type="number" id="product-price" required min="0" step="0.01" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Price (₱)">
                         <input type="number" id="product-stock" required min="0" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Stock Quantity">
-                        <input type="url" id="product-image" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Image URL (Optional)">
-                        <div class="flex items-center">
-                            <input id="product-customizable" type="checkbox" class="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded">
-                            <label for="product-customizable" class="ml-2 block text-sm text-gray-900">Customizable Item</label>
+                        <div>
+                            <label for="product-image" class="file-input-label block w-full text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                                <span id="file-name">Upload a Photo</span>
+                            </label>
+                            <input type="file" id="product-image" class="file-input-hidden" accept="image/*">
                         </div>
                     </div>
                     <div class="mt-8 flex justify-end space-x-3">
                         <button type="button" class="cancel-modal-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">Cancel</button>
-                        <button type="submit" class="px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors">Save Product</button>
+                        <button type="submit" id="save-product-btn" class="px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors flex items-center">
+                           <span id="save-product-text">Save Product</span>
+                           <div id="save-product-loader" class="hidden animate-spin rounded-full h-5 w-5 border-b-2 border-black ml-2"></div>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -155,27 +172,6 @@
             </div>
         </div>
         
-        <div id="customization-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 modal-backdrop">
-            <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-                <form id="customization-form" class="p-8">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Customize Barong</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2">
-                        <select id="custom-fabric" class="w-full border-gray-300 rounded-lg shadow-sm" required><option value="">Select Fabric</option><option>Piña</option><option>Jusi</option><option>Organza</option></select>
-                        <select id="custom-embroidery" class="w-full border-gray-300 rounded-lg shadow-sm" required><option value="">Select Embroidery</option><option>Calado</option><option>Full-Front</option><option>Minimalist</option></select>
-                        <input type="number" step="0.1" id="custom-shoulder" class="w-full border-gray-300 rounded-lg shadow-sm" placeholder="Shoulder (in)">
-                        <input type="number" step="0.1" id="custom-chest" class="w-full border-gray-300 rounded-lg shadow-sm" placeholder="Chest (in)">
-                        <input type="number" step="0.1" id="custom-waist" class="w-full border-gray-300 rounded-lg shadow-sm" placeholder="Waist (in)">
-                        <input type="number" step="0.1" id="custom-length" class="w-full border-gray-300 rounded-lg shadow-sm" placeholder="Sleeve Length (in)">
-                        <textarea id="custom-notes" class="md:col-span-2 w-full border-gray-300 rounded-lg shadow-sm" placeholder="Special Instructions..."></textarea>
-                    </div>
-                    <div class="mt-8 flex justify-end space-x-3">
-                        <button type="button" class="cancel-modal-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
-                        <button type="submit" class="px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500">Add to Order</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
         <div id="checkout-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 modal-backdrop">
             <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-lg">
                 <form id="checkout-form" class="p-8">
@@ -241,11 +237,11 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
         
         // --- App Configuration & State---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pos-app';
         
-        // Firebase configuration provided by the user
         const firebaseConfig = {
             apiKey: "AIzaSyCzq9xJvubPS3u3-FW9EamNfZMt-8BDmzE",
             authDomain: "ellen-s-creation.firebaseapp.com",
@@ -256,9 +252,9 @@
             measurementId: "G-8WPR5J0F5M"
         };
 
-        let db, auth, userId = null;
+        let db, auth, storage, userId = null;
         let products = [], sales = [], customers = [];
-        let cart = []; // Array of cart items { productId, name, price, quantity, customizations }
+        let cart = []; // Now an array of simple product items
         let currentView = 'pos';
         let productsUnsubscribe, salesUnsubscribe, customersUnsubscribe = null;
         let resolveConfirm;
@@ -279,7 +275,6 @@
         const modals = {
             product: document.getElementById('product-modal'),
             customer: document.getElementById('customer-modal'),
-            customization: document.getElementById('customization-modal'),
             checkout: document.getElementById('checkout-modal'),
             receipt: document.getElementById('receipt-modal'),
             confirm: document.getElementById('confirm-modal')
@@ -295,6 +290,7 @@
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
+                storage = getStorage(app);
                 
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
@@ -304,14 +300,12 @@
                         document.getElementById('main-content').classList.remove('hidden');
                         switchView(currentView);
                     } else {
-                        // Sign in anonymously if no other auth method is available
                         try {
                             await signInAnonymously(auth);
                         } catch (error) {
                             console.error("Anonymous sign-in failed:", error);
-                            showToast("Authentication failed. Please enable Anonymous sign-in in your Firebase project.", 'error');
-                            // Hide loading and show an error message on the main screen
-                            document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-lg">Error: Could not authenticate. Please check console and Firebase settings.</p>`;
+                            showToast("Authentication failed. Please check your Firebase settings.", 'error');
+                            document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-lg p-4"><b>Authentication Error:</b> Could not sign in. <br>Please ensure <b>Anonymous Auth</b> is enabled in your Firebase project and that your <b>Firestore Rules</b> are correctly set up to allow access.</p>`;
                         }
                     }
                 });
@@ -334,21 +328,30 @@
                 products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 products.sort((a, b) => a.name.localeCompare(b.name));
                 renderCurrentView();
-            }, err => console.error("Product listener error:", err));
+            }, err => {
+                console.error("Product listener error:", err);
+                showToast("Error fetching products. Check Firestore rules.", 'error');
+            });
             
             const salesRef = collection(db, 'artifacts', appId, 'users', userId, 'sales');
             const salesQuery = query(salesRef, orderBy("timestamp", "desc"));
             salesUnsubscribe = onSnapshot(salesQuery, snapshot => {
                 sales = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderCurrentView();
-            }, err => console.error("Sales listener error:", err));
+            }, err => {
+                console.error("Sales listener error:", err);
+                showToast("Error fetching sales. Check Firestore rules.", 'error');
+            });
 
             const customersRef = collection(db, 'artifacts', appId, 'users', userId, 'customers');
             customersUnsubscribe = onSnapshot(customersRef, snapshot => {
                 customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 customers.sort((a,b) => a.name.localeCompare(b.name));
                 renderCurrentView();
-            }, err => console.error("Customer listener error:", err));
+            }, err => {
+                console.error("Customer listener error:", err);
+                showToast("Error fetching customers. Check Firestore rules.", 'error');
+            });
         }
 
         // --- View Rendering ---
@@ -376,7 +379,6 @@
                                         <h3 class="font-semibold truncate">${p.name}</h3>
                                         <p class="text-yellow-600 font-bold">₱${p.price.toFixed(2)}</p>
                                         <p class="text-xs text-gray-500">Stock: ${p.stock}</p>
-                                        ${p.customizable ? `<span class="text-xs font-semibold text-yellow-800 bg-yellow-100 px-2 py-1 rounded-full mt-1 inline-block">Customizable</span>` : ''}
                                     </div>
                                 </div>`).join('')}
                         </div>
@@ -408,7 +410,6 @@
                             <div>
                                 <p class="font-semibold">${item.name}</p>
                                 <p class="text-sm text-gray-500">₱${item.price.toFixed(2)} x ${item.quantity}</p>
-                                ${item.customizations ? `<button class="view-details-btn text-xs text-yellow-600 hover:underline" data-index="${index}">View Details</button>` : ''}
                             </div>
                             <button class="cart-remove-btn text-red-500 hover:text-red-700 p-1" data-index="${index}">
                                 <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
@@ -426,16 +427,6 @@
             cartContainer.querySelector('#clear-cart-btn')?.addEventListener('click', clearCart);
             cartContainer.querySelector('#checkout-btn')?.addEventListener('click', openCheckoutModal);
             cartContainer.querySelectorAll('.cart-remove-btn').forEach(btn => btn.addEventListener('click', e => removeFromCart(parseInt(e.currentTarget.dataset.index))));
-            cartContainer.querySelectorAll('.view-details-btn').forEach(btn => {
-                btn.addEventListener('click', e => {
-                    const item = cart[parseInt(e.currentTarget.dataset.index)];
-                    const details = Object.entries(item.customizations)
-                        .map(([key, value]) => value ? `${key}: ${value}` : null)
-                        .filter(Boolean)
-                        .join('\n');
-                    alert(`Customization Details:\n\n${details}`);
-                });
-            });
         }
         
         function renderInventoryView() { 
@@ -455,12 +446,11 @@
                                     <th class="p-4 font-semibold text-gray-600">Product</th>
                                     <th class="p-4 font-semibold text-gray-600">Price</th>
                                     <th class="p-4 font-semibold text-gray-600">Stock</th>
-                                    <th class="p-4 font-semibold text-gray-600">Type</th>
                                     <th class="p-4 font-semibold text-gray-600 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${products.length === 0 ? `<tr><td colspan="5" class="text-center p-8 text-gray-500">No products in inventory.</td></tr>` : ''}
+                                ${products.length === 0 ? `<tr><td colspan="4" class="text-center p-8 text-gray-500">No products in inventory.</td></tr>` : ''}
                                 ${products.map(p => `
                                     <tr class="border-b border-gray-200 last:border-b-0 hover:bg-yellow-50/50">
                                         <td class="p-4 flex items-center space-x-3">
@@ -469,11 +459,6 @@
                                         </td>
                                         <td class="p-4">₱${p.price.toFixed(2)}</td>
                                         <td class="p-4">${p.stock}</td>
-                                        <td class="p-4">
-                                            <span class="text-xs font-semibold px-2 py-1 rounded-full ${p.customizable ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600'}">
-                                                ${p.customizable ? 'Custom' : 'Standard'}
-                                            </span>
-                                        </td>
                                         <td class="p-4 space-x-2 text-right">
                                             <button class="edit-product-btn p-2 rounded-md hover:bg-gray-200 transition-colors" data-id="${p.id}" title="Edit"><svg class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
                                             <button class="delete-product-btn p-2 rounded-md hover:bg-gray-200 transition-colors" data-id="${p.id}" title="Delete"><svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
@@ -586,11 +571,7 @@
 
         function handleProductClick(productId) {
             const product = products.find(p => p.id === productId);
-            if(product.customizable) {
-                openCustomizationModal(productId);
-            } else {
-                addToCart({ productId, name: product.name, price: product.price, quantity: 1, customizations: null });
-            }
+            addToCart({ productId: product.id, name: product.name, price: product.price, quantity: 1 });
         }
 
         function addToCart(item) {
@@ -661,17 +642,45 @@
         
         async function handleProductFormSubmit(e) {
             e.preventDefault();
+            const saveButton = document.getElementById('save-product-btn');
+            const buttonText = document.getElementById('save-product-text');
+            const loader = document.getElementById('save-product-loader');
+            
+            saveButton.disabled = true;
+            buttonText.classList.add('hidden');
+            loader.classList.remove('hidden');
+
             const id = document.getElementById('product-id').value;
+            const imageFile = document.getElementById('product-image').files[0];
+            let imageUrl = document.getElementById('existing-image-url').value;
+
+            if (imageFile) {
+                const imageRef = ref(storage, `images/${userId}/${Date.now()}-${imageFile.name}`);
+                try {
+                    const snapshot = await uploadBytes(imageRef, imageFile);
+                    imageUrl = await getDownloadURL(snapshot.ref);
+                } catch (error) {
+                    console.error("Error uploading image: ", error);
+                    showToast("Image upload failed.", "error");
+                    saveButton.disabled = false;
+                    buttonText.classList.remove('hidden');
+                    loader.classList.add('hidden');
+                    return;
+                }
+            }
+
             const productData = {
                 name: document.getElementById('product-name').value.trim(),
                 price: parseFloat(document.getElementById('product-price').value),
                 stock: parseInt(document.getElementById('product-stock').value),
-                image: document.getElementById('product-image').value.trim(),
-                customizable: document.getElementById('product-customizable').checked,
+                image: imageUrl,
             };
 
             if (!productData.name || isNaN(productData.price) || isNaN(productData.stock)) {
                 showToast("Please fill all required fields correctly.", "error");
+                saveButton.disabled = false;
+                buttonText.classList.remove('hidden');
+                loader.classList.add('hidden');
                 return;
             }
 
@@ -688,7 +697,11 @@
                 closeModal(modals.product);
             } catch (error) {
                 console.error("Error saving product:", error);
-                showToast('Failed to save product.', 'error');
+                showToast('Failed to save product. Check permissions.', 'error');
+            } finally {
+                saveButton.disabled = false;
+                buttonText.classList.remove('hidden');
+                loader.classList.add('hidden');
             }
         }
 
@@ -760,24 +773,6 @@
             }
         }
 
-        function handleCustomizationFormSubmit(e) {
-            e.preventDefault();
-            const form = e.target;
-            const productId = form.dataset.productId;
-            const product = products.find(p => p.id === productId);
-            const customizations = {
-                Fabric: form.querySelector('#custom-fabric').value,
-                Embroidery: form.querySelector('#custom-embroidery').value,
-                Shoulder: form.querySelector('#custom-shoulder').value,
-                Chest: form.querySelector('#custom-chest').value,
-                Waist: form.querySelector('#custom-waist').value,
-                Length: form.querySelector('#custom-length').value,
-                Notes: form.querySelector('#custom-notes').value,
-            };
-            addToCart({ productId, name: product.name, price: product.price, quantity: 1, customizations });
-            closeModal(modals.customization);
-        }
-
         // --- Modal & UI Helpers ---
         function openModal(modal) { modal.classList.remove('hidden'); setTimeout(() => modal.classList.add('modal-visible'), 10); }
         function closeModal(modal) { modal.classList.remove('modal-visible'); setTimeout(() => modal.classList.add('hidden'), 300); }
@@ -785,7 +780,10 @@
         function openProductModal(productId = null) {
             const form = document.getElementById('product-form');
             form.reset();
+            document.getElementById('file-name').textContent = 'Upload a Photo';
             form.querySelector('#product-id').value = '';
+            form.querySelector('#existing-image-url').value = '';
+
             document.getElementById('product-modal-title').textContent = "Add New Creation";
             if (productId) {
                 const product = products.find(p => p.id === productId);
@@ -795,8 +793,10 @@
                     form.querySelector('#product-name').value = product.name;
                     form.querySelector('#product-price').value = product.price;
                     form.querySelector('#product-stock').value = product.stock;
-                    form.querySelector('#product-image').value = product.image || '';
-                    form.querySelector('#product-customizable').checked = product.customizable || false;
+                    if(product.image) {
+                        document.getElementById('file-name').textContent = 'Change Photo';
+                        form.querySelector('#existing-image-url').value = product.image;
+                    }
                 }
             }
             openModal(modals.product);
@@ -819,13 +819,6 @@
             }
             openModal(modals.customer);
         }
-
-        function openCustomizationModal(productId) {
-            const form = document.getElementById('customization-form');
-            form.reset();
-            form.dataset.productId = productId;
-            openModal(modals.customization);
-        }
         
         function openCheckoutModal() {
             if (cart.length === 0) return;
@@ -844,7 +837,6 @@
                             <span>${item.quantity} x ${item.name}</span>
                             <span>₱${(item.quantity * item.price).toFixed(2)}</span>
                         </div>
-                        ${item.customizations ? `<div class="text-xs text-gray-500 pl-2 whitespace-pre-wrap">${Object.entries(item.customizations).map(([k,v]) => v ? `${k}: ${v}`:null).filter(Boolean).join('\n')}</div>` : ''}
                     </div>`).join('')}
                 <div class="flex justify-between font-bold text-lg mt-4"><span>Total</span><span>₱${total.toFixed(2)}</span></div>
                 <div class="flex justify-between text-sm mt-1"><span>Payment:</span><span>${paymentMethod}</span></div>
@@ -894,9 +886,17 @@
 
             document.getElementById('product-form').addEventListener('submit', handleProductFormSubmit);
             document.getElementById('customer-form').addEventListener('submit', handleCustomerFormSubmit);
-            document.getElementById('customization-form').addEventListener('submit', handleCustomizationFormSubmit);
             document.getElementById('checkout-form').addEventListener('submit', e => { e.preventDefault(); handleCheckout(); });
             document.getElementById('close-receipt-modal').addEventListener('click', () => closeModal(modals.receipt));
+            
+            document.getElementById('product-image').addEventListener('change', (e) => {
+                const fileNameSpan = document.getElementById('file-name');
+                if (e.target.files && e.target.files[0]) {
+                    fileNameSpan.textContent = e.target.files[0].name;
+                } else {
+                    fileNameSpan.textContent = 'Upload a Photo';
+                }
+            });
 
             document.getElementById('confirm-modal-cancel').addEventListener('click', () => { closeModal(modals.confirm); if (resolveConfirm) resolveConfirm(false); });
             document.getElementById('confirm-modal-confirm').addEventListener('click', () => { closeModal(modals.confirm); if (resolveConfirm) resolveConfirm(true); });
