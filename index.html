@@ -122,15 +122,18 @@
         <header class="bg-white/80 backdrop-blur-sm shadow-md sticky top-0 z-20 no-print">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20 flex-wrap">
-                    <div id="logo-container" class="flex items-center space-x-4">
-                        <!-- Logo will be injected here by JS -->
+                    <div class="flex items-center space-x-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v2a1 1 0 01-1 1h-1.172a3 3 0 00-5.656 0H4a1 1 0 01-1-1V6a1 1 0 011-1h3a1 1 0 001-1V3.5zM3.5 12a1.5 1.5 0 00-3 0V13a1 1 0 001 1v1.5a1.5 1.5 0 003 0V14a1 1 0 001-1v-1zM16.5 12a1.5 1.5 0 00-3 0V13a1 1 0 001 1v1.5a1.5 1.5 0 003 0V14a1 1 0 001-1v-1z"/>
+                            <path d="M10 8a2.5 2.5 0 00-2.5 2.5V18a2 2 0 002 2h5a2 2 0 002-2v-7.5A2.5 2.5 0 0012.5 8H10z"/>
+                        </svg>
+                        <h1 class="font-pacifico text-3xl text-gray-800">Ellen's Creations</h1>
                     </div>
                     <nav class="flex space-x-1 sm:space-x-4">
                         <button id="nav-pos" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">POS</button>
                         <button id="nav-inventory" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Inventory</button>
                         <button id="nav-customers" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Customers</button>
                         <button id="nav-reports" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Reports</button>
-                        <button id="nav-settings" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Settings</button>
                     </nav>
                 </div>
             </div>
@@ -142,7 +145,6 @@
             <div id="inventory-view" class="hidden"></div>
             <div id="customers-view" class="hidden"></div>
             <div id="reports-view" class="hidden"></div>
-            <div id="settings-view" class="hidden"></div>
         </main>
         
         <!-- Loading State -->
@@ -261,7 +263,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, runTransaction, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
         
@@ -279,11 +281,11 @@
         };
 
         let db, auth, storage, userId = null;
-        let products = [], sales = [], customers = [], branding = {};
+        let products = [], sales = [], customers = [];
         let cart = [];
         let currentView = 'pos';
         let reportSearchTerm = '';
-        let productsUnsubscribe, salesUnsubscribe, customersUnsubscribe, brandingUnsubscribe = null;
+        let productsUnsubscribe, salesUnsubscribe, customersUnsubscribe = null;
         let resolveConfirm;
 
         // --- UI Element Groups ---
@@ -292,14 +294,12 @@
             inventory: document.getElementById('inventory-view'),
             customers: document.getElementById('customers-view'),
             reports: document.getElementById('reports-view'),
-            settings: document.getElementById('settings-view'),
         };
         const navTabs = {
             pos: document.getElementById('nav-pos'),
             inventory: document.getElementById('nav-inventory'),
             customers: document.getElementById('nav-customers'),
             reports: document.getElementById('nav-reports'),
-            settings: document.getElementById('nav-settings'),
         };
         const modals = {
             product: document.getElementById('product-modal'),
@@ -334,7 +334,7 @@
                         } catch (error) {
                             console.error("Anonymous sign-in failed:", error);
                             showToast("Authentication failed. Please check your Firebase settings.", 'error');
-                            document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-lg p-4"><b>Authentication Error:</b> Could not sign in. <br>Please ensure <b>Anonymous Auth</b> is enabled in your Firebase project and that your <b>Firestore & Storage Rules</b> are correctly set up.</p>`;
+                            document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-lg p-4"><b>Authentication Error:</b> Could not sign in. <br>Please ensure <b>Anonymous Auth</b> is enabled in your Firebase project and that your <b>Firestore Rules</b> are correctly set up to allow access.</p>`;
                         }
                     }
                 });
@@ -348,11 +348,9 @@
         async function setupDataListeners() {
             if (!userId) return;
 
-            const unsub = (fn) => { if (fn) fn(); };
-            unsub(productsUnsubscribe);
-            unsub(salesUnsubscribe);
-            unsub(customersUnsubscribe);
-            unsub(brandingUnsubscribe);
+            if (productsUnsubscribe) productsUnsubscribe();
+            if (salesUnsubscribe) salesUnsubscribe();
+            if (customersUnsubscribe) customersUnsubscribe();
 
             const productsRef = collection(db, 'artifacts', appId, 'users', userId, 'products');
             productsUnsubscribe = onSnapshot(productsRef, snapshot => {
@@ -374,13 +372,6 @@
                 customers.sort((a,b) => a.name.localeCompare(b.name));
                 renderCurrentView();
             }, err => console.error("Customer listener error:", err));
-            
-            const brandingRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'branding');
-            brandingUnsubscribe = onSnapshot(brandingRef, doc => {
-                branding = doc.exists() ? doc.data() : {};
-                renderHeader(); // Re-render header when branding changes
-                renderCurrentView();
-            }, err => console.error("Branding listener error:", err));
         }
 
         // --- View Rendering ---
@@ -391,21 +382,6 @@
                 case 'inventory': renderInventoryView(); break;
                 case 'customers': renderCustomersView(); break;
                 case 'reports': renderReportsView(); break;
-                case 'settings': renderSettingsView(); break;
-            }
-        }
-        
-        function renderHeader() {
-            const logoContainer = document.getElementById('logo-container');
-            if (branding.logoUrl) {
-                logoContainer.innerHTML = `<img src="${branding.logoUrl}" alt="Ellen's Creations Logo" class="h-12 object-contain"><h1 class="font-pacifico text-3xl text-gray-800">Ellen's Creations</h1>`;
-            } else {
-                 logoContainer.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v2a1 1 0 01-1 1h-1.172a3 3 0 00-5.656 0H4a1 1 0 01-1-1V6a1 1 0 011-1h3a1 1 0 001-1V3.5zM3.5 12a1.5 1.5 0 00-3 0V13a1 1 0 001 1v1.5a1.5 1.5 0 003 0V14a1 1 0 001-1v-1zM16.5 12a1.5 1.5 0 00-3 0V13a1 1 0 001 1v1.5a1.5 1.5 0 003 0V14a1 1 0 001-1v-1z"/>
-                        <path d="M10 8a2.5 2.5 0 00-2.5 2.5V18a2 2 0 002 2h5a2 2 0 002-2v-7.5A2.5 2.5 0 0012.5 8H10z"/>
-                    </svg>
-                    <h1 class="font-pacifico text-3xl text-gray-800">Ellen's Creations</h1>`;
             }
         }
 
@@ -646,49 +622,6 @@
                 renderReportsView();
             });
         }
-
-        function renderSettingsView() {
-            views.settings.innerHTML = `
-                <div class="max-w-2xl mx-auto">
-                    <h2 class="text-2xl font-bold text-gray-700 mb-6">Settings</h2>
-                    <div class="bg-white p-8 rounded-xl shadow-lg">
-                        <form id="branding-form">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Branding</h3>
-                            <div class="flex items-center gap-4">
-                                <img id="logo-preview" src="${branding.logoUrl || 'https://placehold.co/100x100/FBBF24/000000?text=Logo'}" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md">
-                                <div class="flex-grow">
-                                    <label for="logo-upload" class="file-input-label block w-full text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                                        <span id="logo-file-name">Upload Logo</span>
-                                    </label>
-                                    <input type="file" id="logo-upload" class="file-input-hidden" accept="image/*">
-                                    <p class="text-xs text-gray-500 mt-1">Recommended: Square image (e.g., 200x200px).</p>
-                                </div>
-                            </div>
-                            <div class="mt-6 text-right">
-                                <button type="submit" id="save-branding-btn" class="px-6 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors flex items-center justify-center ml-auto">
-                                    <span id="save-branding-text">Save Settings</span>
-                                    <div id="save-branding-loader" class="hidden animate-spin rounded-full h-5 w-5 border-b-2 border-black ml-2"></div>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('logo-upload').addEventListener('change', e => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        document.getElementById('logo-preview').src = event.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                    document.getElementById('logo-file-name').textContent = file.name;
-                }
-            });
-
-            document.getElementById('branding-form').addEventListener('submit', handleSaveBranding);
-        }
         
         // --- Core Logic & Handlers ---
 
@@ -745,9 +678,11 @@
                 const newSaleRef = doc(collection(db, `artifacts/${appId}/users/${userId}/sales`));
                 
                 await runTransaction(db, async (transaction) => {
+                    // 1. Read all product documents in the cart
                     const productRefs = saleData.items.map(item => doc(db, 'artifacts', appId, 'users', userId, 'products', item.productId));
                     const productDocs = await Promise.all(productRefs.map(ref => transaction.get(ref)));
 
+                    // 2. Validate stock for each product
                     for(let i = 0; i < productDocs.length; i++) {
                         const productDoc = productDocs[i];
                         const item = saleData.items[i];
@@ -756,6 +691,7 @@
                         }
                     }
 
+                    // 3. If all checks pass, perform writes
                     for(let i = 0; i < productDocs.length; i++) {
                         const productRef = productRefs[i];
                         const item = saleData.items[i];
@@ -766,7 +702,7 @@
                     transaction.set(newSaleRef, saleData);
                 });
 
-                saleData.id = newSaleRef.id;
+                saleData.id = newSaleRef.id; // Assign ID for receipt
                 showReceipt(saleData);
                 clearCart();
                 closeModal(modals.checkout);
@@ -785,7 +721,7 @@
             const loader = document.getElementById('save-product-loader');
             
             saveButton.disabled = true;
-            buttonText.textContent = "Uploading...";
+            buttonText.classList.add('hidden');
             loader.classList.remove('hidden');
 
             const id = document.getElementById('product-id').value;
@@ -799,15 +735,13 @@
                     imageUrl = await getDownloadURL(snapshot.ref);
                 } catch (error) {
                     console.error("Error uploading image: ", error);
-                    showToast("Image upload failed. Check permissions.", "error");
+                    showToast("Image upload failed.", "error");
                     saveButton.disabled = false;
-                    buttonText.textContent = "Save Product";
+                    buttonText.classList.remove('hidden');
                     loader.classList.add('hidden');
                     return;
                 }
             }
-            
-            buttonText.textContent = "Saving...";
 
             const productData = {
                 name: document.getElementById('product-name').value.trim(),
@@ -819,7 +753,7 @@
             if (!productData.name || isNaN(productData.price) || isNaN(productData.stock)) {
                 showToast("Please fill all required fields correctly.", "error");
                 saveButton.disabled = false;
-                buttonText.textContent = "Save Product";
+                buttonText.classList.remove('hidden');
                 loader.classList.add('hidden');
                 return;
             }
@@ -840,55 +774,10 @@
                 showToast('Failed to save product. Check permissions.', 'error');
             } finally {
                 saveButton.disabled = false;
-                buttonText.textContent = "Save Product";
+                buttonText.classList.remove('hidden');
                 loader.classList.add('hidden');
             }
         }
-        
-        async function handleSaveBranding(e) {
-             e.preventDefault();
-            const saveButton = document.getElementById('save-branding-btn');
-            const buttonText = document.getElementById('save-branding-text');
-            const loader = document.getElementById('save-branding-loader');
-            
-            saveButton.disabled = true;
-            buttonText.textContent = "Uploading...";
-            loader.classList.remove('hidden');
-
-            const imageFile = document.getElementById('logo-upload').files[0];
-            let logoUrl = branding.logoUrl || '';
-
-             if (imageFile) {
-                const imageRef = ref(storage, `branding/${userId}/logo`);
-                try {
-                    const snapshot = await uploadBytes(imageRef, imageFile);
-                    logoUrl = await getDownloadURL(snapshot.ref);
-                } catch (error) {
-                    console.error("Error uploading logo: ", error);
-                    showToast("Logo upload failed. Check permissions.", "error");
-                    saveButton.disabled = false;
-                    buttonText.textContent = "Save Settings";
-                    loader.classList.add('hidden');
-                    return;
-                }
-            }
-
-            buttonText.textContent = "Saving...";
-
-            try {
-                const brandingRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'branding');
-                await setDoc(brandingRef, { logoUrl: logoUrl }, { merge: true });
-                showToast('Settings saved successfully!');
-            } catch (error) {
-                console.error("Error saving settings:", error);
-                showToast('Failed to save settings.', 'error');
-            } finally {
-                saveButton.disabled = false;
-                buttonText.textContent = "Save Settings";
-                loader.classList.add('hidden');
-            }
-        }
-
 
         async function handleDeleteProduct(id) {
             const confirmed = await showConfirmModal('Delete Product?', 'This will permanently delete this product. This action cannot be undone.');
@@ -1023,7 +912,6 @@
 
             const receiptHTML = `
                 <div class="text-center p-4 border-b border-gray-200">
-                    ${branding.logoUrl ? `<img src="${branding.logoUrl}" class="h-16 mx-auto mb-2 object-contain">` : ''}
                     <h3 class="text-2xl font-pacifico text-gray-800">Ellen's Creations</h3>
                     <p class="text-xs text-gray-500">Official Receipt</p>
                 </div>
@@ -1162,4 +1050,3 @@
     </script>
 </body>
 </html>
-```
