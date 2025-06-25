@@ -6,7 +6,7 @@
     <title>Ellen's Creations - POS System</title>
     
     <!-- Add a favicon to prevent the 404 error -->
-    <link rel="icon" href="https://i.ibb.co/jGGN3t9/1715871329583.jpg">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>">
 
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -74,7 +74,6 @@
             background-size: 1em;
             padding-right: 2rem;
         }
-        /* Hide default file input */
         .file-input-hidden {
             width: 0.1px;
             height: 0.1px;
@@ -123,7 +122,10 @@
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20 flex-wrap">
                     <div id="logo-container" class="flex items-center space-x-4">
-                        <img src="https://i.ibb.co/jGGN3t9/1715871329583.jpg" alt="Ellen's Creations Logo" class="h-12 object-contain">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v2a1 1 0 01-1 1h-1.172a3 3 0 00-5.656 0H4a1 1 0 01-1-1V6a1 1 0 011-1h3a1 1 0 001-1V3.5zM3.5 12a1.5 1.5 0 00-3 0V13a1 1 0 001 1v1.5a1.5 1.5 0 003 0V14a1 1 0 001-1v-1zM16.5 12a1.5 1.5 0 00-3 0V13a1 1 0 001 1v1.5a1.5 1.5 0 003 0V14a1 1 0 001-1v-1z"/>
+                            <path d="M10 8a2.5 2.5 0 00-2.5 2.5V18a2 2 0 002 2h5a2 2 0 002-2v-7.5A2.5 2.5 0 0012.5 8H10z"/>
+                        </svg>
                         <h1 class="font-pacifico text-3xl text-gray-800">Ellen's Creations</h1>
                     </div>
                     <nav class="flex space-x-1 sm:space-x-4">
@@ -219,7 +221,7 @@
             </div>
         </div>
         
-        <div id="receipt-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div id="receipt-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
             <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-sm">
                  <div id="receipt-content-wrapper" class="p-6">
                     <!-- Receipt content will be injected here -->
@@ -874,10 +876,11 @@
             closeButton.textContent = isHistoricalView ? "Close" : "New Order";
             
             const saleDate = sale.timestamp ? (typeof sale.timestamp.toDate === 'function' ? sale.timestamp.toDate() : new Date()) : new Date();
+            const logoUrl = "https://i.ibb.co/LzbQ8TJ/386471846-165581799940367-5700032273973764961-n-1.jpg";
 
             const receiptHTML = `
                 <div class="text-center p-4 border-b border-gray-200">
-                    <img src="https://i.ibb.co/jGGN3t9/1715871329583.jpg" class="h-16 mx-auto mb-2 object-contain" onerror="this.style.display='none'">
+                    <img src="${logoUrl}" class="h-16 mx-auto mb-2 object-contain" onerror="this.style.display='none'">
                     <h3 class="text-2xl font-pacifico text-gray-800">Ellen's Creations</h3>
                     <p class="text-xs text-gray-500">Official Receipt</p>
                 </div>
