@@ -722,8 +722,8 @@
             loader.classList.remove('hidden');
 
             const id = document.getElementById('product-id').value;
-            const imageFile = document.getElementById('product-image-upload').files[0];
-            let imageUrl = document.getElementById('existing-image-url').value;
+            const imageFile = document.getElementById('product-image-upload')?.files[0];
+            let imageUrl = document.getElementById('existing-image-url')?.value || '';
 
             if (imageFile) {
                 buttonText.textContent = "Uploading...";
@@ -733,7 +733,11 @@
                     imageUrl = await getDownloadURL(snapshot.ref);
                 } catch (error) {
                     console.error("Error uploading image: ", error);
-                    showToast("Image upload failed. Check permissions.", "error");
+                    if (error.code === 'storage/unauthorized') {
+                        showToast("Upload failed: Check Firebase Storage rules.", "error");
+                    } else {
+                        showToast("Image upload failed.", "error");
+                    }
                     saveButton.disabled = false;
                     buttonText.textContent = "Save Product";
                     loader.classList.add('hidden');
@@ -857,7 +861,8 @@
             document.getElementById('file-name').textContent = 'Upload a Photo';
             document.getElementById('image-preview').src = 'https://placehold.co/100x100/FEFCE8/CBD5E1?text=Preview';
             form.querySelector('#product-id').value = '';
-            
+            form.querySelector('#existing-image-url').value = '';
+
             document.getElementById('product-modal-title').textContent = "Add New Creation";
             if (productId) {
                 const product = products.find(p => p.id === productId);
@@ -1011,7 +1016,6 @@
             
             document.getElementById('print-receipt-btn').addEventListener('click', () => {
                 document.body.classList.add('printing');
-                // Timeout to allow styles to apply before printing
                 setTimeout(() => {
                     window.print();
                 }, 100);
@@ -1060,4 +1064,3 @@
     </script>
 </body>
 </html>
-```
