@@ -6,7 +6,7 @@
     <title>Ellen's Creations - POS System</title>
     
     <!-- Add a favicon to prevent the 404 error -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>">
+    <link rel="icon" href="https://i.ibb.co/LzbQ8TJ/386471846-165581799940367-5700032273973764961-n-1.jpg">
 
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -123,14 +123,14 @@
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20 flex-wrap">
                     <div id="logo-container" class="flex items-center space-x-4">
-                        <!-- Logo will be injected here by JS -->
+                        <img src="https://i.ibb.co/LzbQ8TJ/386471846-165581799940367-5700032273973764961-n-1.jpg" alt="Ellen's Creations Logo" class="h-12 object-contain">
+                        <h1 class="font-pacifico text-3xl text-gray-800">Ellen's Creations</h1>
                     </div>
                     <nav class="flex space-x-1 sm:space-x-4">
                         <button id="nav-pos" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">POS</button>
                         <button id="nav-inventory" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Inventory</button>
                         <button id="nav-customers" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Customers</button>
                         <button id="nav-reports" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Reports</button>
-                        <button id="nav-settings" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Settings</button>
                     </nav>
                 </div>
             </div>
@@ -142,7 +142,6 @@
             <div id="inventory-view" class="hidden"></div>
             <div id="customers-view" class="hidden"></div>
             <div id="reports-view" class="hidden"></div>
-            <div id="settings-view" class="hidden"></div>
         </main>
         
         <!-- Loading State -->
@@ -162,7 +161,7 @@
                         <input type="text" id="product-name" required class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Product Name">
                         <input type="number" id="product-price" required min="0" step="0.01" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Price (₱)">
                         <input type="number" id="product-stock" required min="0" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Stock Quantity">
-                        <div class="flex items-center gap-4">
+                         <div class="flex items-center gap-4">
                             <img id="image-preview" class="w-16 h-16 rounded-lg object-cover border-2 border-gray-200" src="https://placehold.co/100x100/FEFCE8/CBD5E1?text=Preview">
                             <div class="flex-grow">
                                 <label for="product-image-upload" class="file-input-label block w-full text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
@@ -264,7 +263,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, runTransaction, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
         
@@ -282,11 +281,11 @@
         };
 
         let db, auth, storage, userId = null;
-        let products = [], sales = [], customers = [], branding = {};
+        let products = [], sales = [], customers = [];
         let cart = [];
         let currentView = 'pos';
         let reportSearchTerm = '';
-        let productsUnsubscribe, salesUnsubscribe, customersUnsubscribe, brandingUnsubscribe = null;
+        let productsUnsubscribe, salesUnsubscribe, customersUnsubscribe = null;
         let resolveConfirm;
 
         // --- UI Element Groups ---
@@ -295,14 +294,12 @@
             inventory: document.getElementById('inventory-view'),
             customers: document.getElementById('customers-view'),
             reports: document.getElementById('reports-view'),
-            settings: document.getElementById('settings-view'),
         };
         const navTabs = {
             pos: document.getElementById('nav-pos'),
             inventory: document.getElementById('nav-inventory'),
             customers: document.getElementById('nav-customers'),
             reports: document.getElementById('nav-reports'),
-            settings: document.getElementById('nav-settings'),
         };
         const modals = {
             product: document.getElementById('product-modal'),
@@ -351,11 +348,9 @@
         async function setupDataListeners() {
             if (!userId) return;
 
-            const unsub = (fn) => { if (fn) fn(); };
-            unsub(productsUnsubscribe);
-            unsub(salesUnsubscribe);
-            unsub(customersUnsubscribe);
-            unsub(brandingUnsubscribe);
+            if (productsUnsubscribe) productsUnsubscribe();
+            if (salesUnsubscribe) salesUnsubscribe();
+            if (customersUnsubscribe) customersUnsubscribe();
 
             const productsRef = collection(db, 'artifacts', appId, 'users', userId, 'products');
             productsUnsubscribe = onSnapshot(productsRef, snapshot => {
@@ -377,12 +372,6 @@
                 customers.sort((a,b) => a.name.localeCompare(b.name));
                 renderCurrentView();
             }, err => console.error("Customer listener error:", err));
-            
-            const brandingRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'branding');
-            brandingUnsubscribe = onSnapshot(brandingRef, doc => {
-                branding = doc.exists() ? doc.data() : {};
-                renderHeader();
-            }, err => console.error("Branding listener error:", err));
         }
 
         // --- View Rendering ---
@@ -393,14 +382,7 @@
                 case 'inventory': renderInventoryView(); break;
                 case 'customers': renderCustomersView(); break;
                 case 'reports': renderReportsView(); break;
-                case 'settings': renderSettingsView(); break;
             }
-        }
-        
-        function renderHeader() {
-            const logoContainer = document.getElementById('logo-container');
-            const logoUrl = branding.logoUrl || "https://i.ibb.co/LzbQ8TJ/386471846-165581799940367-5700032273973764961-n-1.jpg";
-            logoContainer.innerHTML = `<img src="${logoUrl}" alt="Ellen's Creations Logo" class="h-12 object-contain mr-2"><h1 class="font-pacifico text-3xl text-gray-800">Ellen's Creations</h1>`;
         }
 
         function renderPosView() {
@@ -740,7 +722,26 @@
             loader.classList.remove('hidden');
 
             const id = document.getElementById('product-id').value;
-            const imageUrl = document.getElementById('product-image').value.trim();
+            const imageFile = document.getElementById('product-image-upload').files[0];
+            let imageUrl = document.getElementById('existing-image-url').value;
+
+            if (imageFile) {
+                buttonText.textContent = "Uploading...";
+                const imageRef = ref(storage, `images/${userId}/${Date.now()}-${imageFile.name}`);
+                try {
+                    const snapshot = await uploadBytes(imageRef, imageFile);
+                    imageUrl = await getDownloadURL(snapshot.ref);
+                } catch (error) {
+                    console.error("Error uploading image: ", error);
+                    showToast("Image upload failed. Check permissions.", "error");
+                    saveButton.disabled = false;
+                    buttonText.textContent = "Save Product";
+                    loader.classList.add('hidden');
+                    return;
+                }
+            }
+            
+            buttonText.textContent = "Saving...";
 
             const productData = {
                 name: document.getElementById('product-name').value.trim(),
@@ -853,6 +854,8 @@
         function openProductModal(productId = null) {
             const form = document.getElementById('product-form');
             form.reset();
+            document.getElementById('file-name').textContent = 'Upload a Photo';
+            document.getElementById('image-preview').src = 'https://placehold.co/100x100/FEFCE8/CBD5E1?text=Preview';
             form.querySelector('#product-id').value = '';
             
             document.getElementById('product-modal-title').textContent = "Add New Creation";
@@ -864,7 +867,10 @@
                     form.querySelector('#product-name').value = product.name;
                     form.querySelector('#product-price').value = product.price;
                     form.querySelector('#product-stock').value = product.stock;
-                    form.querySelector('#product-image').value = product.image || '';
+                    if(product.image) {
+                        form.querySelector('#existing-image-url').value = product.image;
+                        document.getElementById('image-preview').src = product.image;
+                    }
                 }
             }
             openModal(modals.product);
@@ -1025,6 +1031,23 @@
                     link.click();
                 });
             });
+            
+            document.getElementById('product-image-upload').addEventListener('change', (e) => {
+                const fileNameSpan = document.getElementById('file-name');
+                const preview = document.getElementById('image-preview');
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        preview.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                    fileNameSpan.textContent = file.name;
+                } else {
+                    fileNameSpan.textContent = 'Upload a Photo';
+                    preview.src = 'https://placehold.co/100x100/FEFCE8/CBD5E1?text=Preview';
+                }
+            });
 
             document.getElementById('confirm-modal-cancel').addEventListener('click', () => { closeModal(modals.confirm); if (resolveConfirm) resolveConfirm(false); });
             document.getElementById('confirm-modal-confirm').addEventListener('click', () => { closeModal(modals.confirm); if (resolveConfirm) resolveConfirm(true); });
@@ -1037,3 +1060,4 @@
     </script>
 </body>
 </html>
+```
