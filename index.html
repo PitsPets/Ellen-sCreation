@@ -265,7 +265,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
         
         // --- App Configuration & State---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pos-app';
@@ -280,7 +279,7 @@
             measurementId: "G-8WPR5J0F5M"
         };
 
-        let db, auth, storage, userId = null;
+        let db, auth, userId = null;
         let products = [], sales = [], customers = [];
         let cart = [];
         let currentView = 'pos';
@@ -319,7 +318,6 @@
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                storage = getStorage(app);
                 
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
@@ -334,7 +332,7 @@
                         } catch (error) {
                             console.error("Anonymous sign-in failed:", error);
                             showToast("Authentication failed. Please check your Firebase settings.", 'error');
-                            document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-lg p-4"><b>Authentication Error:</b> Could not sign in. <br>Please ensure <b>Anonymous Auth</b> is enabled in your Firebase project and that your <b>Firestore & Storage Rules</b> are correctly set up.</p>`;
+                            document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-lg p-4"><b>Authentication Error:</b> Could not sign in. <br>Please ensure <b>Anonymous Auth</b> is enabled in your Firebase project and that your <b>Firestore Rules</b> are correctly set up.</p>`;
                         }
                     }
                 });
@@ -722,30 +720,7 @@
             loader.classList.remove('hidden');
 
             const id = document.getElementById('product-id').value;
-            const imageFile = document.getElementById('product-image-upload')?.files[0];
-            let imageUrl = document.getElementById('existing-image-url')?.value || '';
-
-            if (imageFile) {
-                buttonText.textContent = "Uploading...";
-                const imageRef = ref(storage, `images/${userId}/${Date.now()}-${imageFile.name}`);
-                try {
-                    const snapshot = await uploadBytes(imageRef, imageFile);
-                    imageUrl = await getDownloadURL(snapshot.ref);
-                } catch (error) {
-                    console.error("Error uploading image: ", error);
-                    if (error.code === 'storage/unauthorized') {
-                        showToast("Upload failed: Check Firebase Storage rules.", "error");
-                    } else {
-                        showToast("Image upload failed.", "error");
-                    }
-                    saveButton.disabled = false;
-                    buttonText.textContent = "Save Product";
-                    loader.classList.add('hidden');
-                    return;
-                }
-            }
-            
-            buttonText.textContent = "Saving...";
+            const imageUrl = document.getElementById('product-image').value.trim();
 
             const productData = {
                 name: document.getElementById('product-name').value.trim(),
@@ -858,11 +833,8 @@
         function openProductModal(productId = null) {
             const form = document.getElementById('product-form');
             form.reset();
-            document.getElementById('file-name').textContent = 'Upload a Photo';
-            document.getElementById('image-preview').src = 'https://placehold.co/100x100/FEFCE8/CBD5E1?text=Preview';
             form.querySelector('#product-id').value = '';
-            form.querySelector('#existing-image-url').value = '';
-
+            
             document.getElementById('product-modal-title').textContent = "Add New Creation";
             if (productId) {
                 const product = products.find(p => p.id === productId);
@@ -872,10 +844,7 @@
                     form.querySelector('#product-name').value = product.name;
                     form.querySelector('#product-price').value = product.price;
                     form.querySelector('#product-stock').value = product.stock;
-                    if(product.image) {
-                        form.querySelector('#existing-image-url').value = product.image;
-                        document.getElementById('image-preview').src = product.image;
-                    }
+                    form.querySelector('#product-image').value = product.image || '';
                 }
             }
             openModal(modals.product);
@@ -1016,6 +985,7 @@
             
             document.getElementById('print-receipt-btn').addEventListener('click', () => {
                 document.body.classList.add('printing');
+                // Timeout to allow styles to apply before printing
                 setTimeout(() => {
                     window.print();
                 }, 100);
@@ -1034,23 +1004,6 @@
                     link.href = canvas.toDataURL('image/jpeg', 0.9);
                     link.click();
                 });
-            });
-            
-            document.getElementById('product-image-upload').addEventListener('change', (e) => {
-                const fileNameSpan = document.getElementById('file-name');
-                const preview = document.getElementById('image-preview');
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        preview.src = event.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                    fileNameSpan.textContent = file.name;
-                } else {
-                    fileNameSpan.textContent = 'Upload a Photo';
-                    preview.src = 'https://placehold.co/100x100/FEFCE8/CBD5E1?text=Preview';
-                }
             });
 
             document.getElementById('confirm-modal-cancel').addEventListener('click', () => { closeModal(modals.confirm); if (resolveConfirm) resolveConfirm(false); });
