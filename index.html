@@ -256,7 +256,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, runTransaction, setDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js"; // ADDED Storage Imports
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // --- App Configuration & State---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pos-app';
@@ -299,7 +299,7 @@
         };
         const modals = {
             product: document.getElementById('product-modal'),
-            customer: document.getElementById('customer-modal'),
+            customer: document:getElementById('customer-modal'),
             checkout: document.getElementById('checkout-modal'),
             receipt: document.getElementById('receipt-modal'),
             confirm: document.getElementById('confirm-modal')
@@ -642,51 +642,95 @@
 
                     <div class="mb-8 p-6 border border-gray-200 rounded-xl bg-yellow-50/50">
                         <h3 class="text-xl font-semibold text-gray-700 mb-4">Store Logo</h3>
-                        <div class="flex items-center gap-6">
-                            <img id="current-logo-preview" class="w-24 h-24 rounded-lg object-contain bg-gray-100 border-2 border-gray-300 p-1"
-                                 src="${appSettings.logoUrl || 'https://placehold.co/100x100/FEFCE8/CBD5E1?text=No+Logo'}"
-                                 alt="Current Logo">
-                            <div>
-                                <label for="logo-upload" class="file-input-label block w-full text-center px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors cursor-pointer">
-                                    <span id="logo-file-name">Upload New Logo</span>
-                                </label>
-                                <input type="file" id="logo-upload" class="file-input-hidden" accept="image/*">
-                                <button id="remove-logo-btn" class="mt-2 w-full px-4 py-2 bg-red-400 text-white rounded-lg hover:bg-red-500 transition-colors ${appSettings.logoUrl ? '' : 'hidden'}">Remove Logo</button>
+                        <form id="logo-settings-form"> <div class="flex items-center gap-6 mb-4">
+                                <img id="current-logo-preview" class="w-24 h-24 rounded-lg object-contain bg-gray-100 border-2 border-gray-300 p-1"
+                                     src="${appSettings.logoUrl || 'https://placehold.co/100x100/FEFCE8/CBD5E1?text=No+Logo'}"
+                                     alt="Current Logo">
+                                <div class="flex-grow">
+                                    <label for="logo-upload" class="file-input-label block w-full text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer">
+                                        <span id="logo-file-name">Select New Logo</span>
+                                    </label>
+                                    <input type="file" id="logo-upload" class="file-input-hidden" accept="image/*">
+                                </div>
                             </div>
-                        </div>
+                            <div class="flex justify-end space-x-3 mt-4">
+                                <button type="button" id="remove-logo-btn" class="px-4 py-2 bg-red-400 text-white rounded-lg hover:bg-red-500 transition-colors ${appSettings.logoUrl ? '' : 'hidden'}">Remove Logo</button>
+                                <button type="submit" id="save-logo-btn" class="px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors flex items-center">
+                                    <span id="save-logo-text">Save Logo</span>
+                                    <div id="save-logo-loader" class="hidden animate-spin rounded-full h-5 w-5 border-b-2 border-black ml-2"></div>
+                                </button>
+                            </div>
+                        </form>
                         <p class="text-sm text-gray-500 mt-4">Upload a new logo for your shop. This will appear on receipts and the header.</p>
                     </div>
 
                     </div>
             `;
 
-            // Add event listeners for the logo upload and remove button
+            // Get elements for logo section
+            const logoSettingsForm = document.getElementById('logo-settings-form'); // Get the new form
             const logoUploadInput = document.getElementById('logo-upload');
             const logoFileNameSpan = document.getElementById('logo-file-name');
             const currentLogoPreview = document.getElementById('current-logo-preview');
             const removeLogoBtn = document.getElementById('remove-logo-btn');
+            const saveLogoBtn = document.getElementById('save-logo-btn'); // Get the new save button
+            const saveLogoText = document.getElementById('save-logo-text');
+            const saveLogoLoader = document.getElementById('save-logo-loader');
 
-            logoUploadInput.addEventListener('change', async (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    logoFileNameSpan.textContent = file.name;
-                    currentLogoPreview.src = URL.createObjectURL(file); // Show instant preview
-                    await uploadLogo(file);
+            let selectedLogoFile = null; // Variable to hold the selected file until 'Save' is clicked
+
+            // Event listener for file selection (previews but doesn't upload yet)
+            logoUploadInput.addEventListener('change', (e) => {
+                selectedLogoFile = e.target.files[0];
+                if (selectedLogoFile) {
+                    logoFileNameSpan.textContent = selectedLogoFile.name;
+                    currentLogoPreview.src = URL.createObjectURL(selectedLogoFile); // Show instant preview
+                    saveLogoBtn.disabled = false; // Enable save button if file is selected
                 } else {
-                    logoFileNameSpan.textContent = 'Upload New Logo';
-                    // Keep existing logo if no new file selected and there was one
+                    logoFileNameSpan.textContent = 'Select New Logo';
                     currentLogoPreview.src = appSettings.logoUrl || 'https://placehold.co/100x100/FEFCE8/CBD5E1?text=No+Logo';
+                    selectedLogoFile = null;
+                    saveLogoBtn.disabled = true; // Disable if no file is selected
+                }
+            });
+
+            // Event listener for the new "Save Logo" button (form submission)
+            logoSettingsForm.addEventListener('submit', async (e) => {
+                e.preventDefault(); // Prevent default form submission
+
+                if (!selectedLogoFile) {
+                    showToast("Please select a logo file to upload.", "error");
+                    return;
+                }
+
+                saveLogoBtn.disabled = true;
+                saveLogoText.textContent = "Uploading...";
+                saveLogoLoader.classList.remove('hidden');
+
+                try {
+                    await uploadLogo(selectedLogoFile);
+                    selectedLogoFile = null; // Clear the selected file after successful upload
+                    logoFileNameSpan.textContent = 'Select New Logo'; // Reset label
+                    saveLogoBtn.disabled = true; // Disable button until new file is selected
+                } finally {
+                    saveLogoText.textContent = "Save Logo";
+                    saveLogoLoader.classList.add('hidden');
                 }
             });
 
             removeLogoBtn.addEventListener('click', async () => {
                 const confirmed = await showConfirmModal('Remove Logo?', 'Are you sure you want to remove your store logo? It will be replaced by the default text.');
                 if (confirmed) {
+                    removeLogoBtn.disabled = true; // Disable while processing
                     await removeLogo();
+                    removeLogoBtn.disabled = false; // Re-enable if needed (though it will be hidden by re-render)
+                    saveLogoBtn.disabled = true; // Also disable save button
+                    logoFileNameSpan.textContent = 'Select New Logo'; // Reset label
                 }
             });
 
-            // Initial state for remove button visibility
+            // Initial state for save and remove buttons
+            saveLogoBtn.disabled = true; // Initially disabled until a file is selected
             if (!appSettings.logoUrl) {
                 removeLogoBtn.classList.add('hidden');
             } else {
@@ -930,7 +974,8 @@
                 return;
             }
 
-            showToast("Uploading logo...", "info");
+            // showToast("Uploading logo...", "info"); // Already handled by button state
+
             const logoRef = ref(storage, `artifacts/${appId}/users/${userId}/branding/logo.jpg`); // Standard path for logo
 
             try {
@@ -947,6 +992,7 @@
             } catch (error) {
                 console.error("Error uploading logo:", error);
                 showToast("Failed to upload logo. Please try again.", "error");
+                throw error; // Re-throw to be caught by the form submit handler's try/catch
             }
         }
 
@@ -959,7 +1005,7 @@
             const logoRef = ref(storage, `artifacts/${appId}/users/${userId}/branding/logo.jpg`);
 
             try {
-                showToast("Removing logo...", "info");
+                // showToast("Removing logo...", "info"); // Already handled by button state
                 await deleteObject(logoRef); // Delete from Firebase Storage
 
                 const settingsDocRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'app_config');
@@ -978,6 +1024,7 @@
                 } else {
                     console.error("Error removing logo:", error);
                     showToast("Failed to remove logo. Please try again.", "error");
+                    throw error; // Re-throw to be caught by the button click handler if desired
                 }
             }
         }
