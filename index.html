@@ -156,9 +156,9 @@
                             <img id="image-preview" class="w-16 h-16 rounded-lg object-cover border-2 border-gray-200" src="https://placehold.co/100x100/FEFCE8/CBD5E1?text=Preview">
                             <div class="flex-grow">
                                 <label for="product-image-upload" class="file-input-label block w-full text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                                    <span id="file-name">Upload a Photo</span>
+                                    <span id="file-name">Upload a Photo / Take Photo</span>
                                 </label>
-                                <input type="file" id="product-image-upload" class="file-input-hidden" accept="image/*">
+                                <input type="file" id="product-image-upload" class="file-input-hidden" accept="image/*" capture="environment">
                             </div>
                         </div>
                     </div>
@@ -253,7 +253,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        // REMOVED: Authentication imports
 
         // --- App Configuration & State---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pos-app';
@@ -273,8 +272,7 @@
         const PERMANENT_LOGO_URL = "https://i.imgur.com/qGxcYJ8.jpeg";
 
 
-        let db; // REMOVED: auth variable
-        // REMOVED: userId variable - no longer needed as data is global
+        let db;
         let products = [], sales = [], customers = [];
         let cart = [];
         let currentView = 'pos';
@@ -313,14 +311,12 @@
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
-                // REMOVED: auth initialization
 
-                // Directly set up listeners as there's no auth state to wait for
                 await setupDataListeners();
                 document.getElementById('loading-state').classList.add('hidden');
                 document.getElementById('main-content').classList.remove('hidden');
                 switchView(currentView);
-                updateHeaderLogo(); // Ensure logo is visible on load
+                updateHeaderLogo();
 
             } catch (error) {
                 console.error("Error initializing Firebase:", error);
@@ -330,14 +326,11 @@
         }
 
         // --- Data Listeners ---
-        // MODIFIED: No longer depends on userId
         async function setupDataListeners() {
-            // Unsubscribe existing listeners to prevent multiple subscriptions
             if (productsUnsubscribe) productsUnsubscribe();
             if (salesUnsubscribe) salesUnsubscribe();
             if (customersUnsubscribe) customersUnsubscribe();
 
-            // MODIFIED: Removed /users/{userId} from paths
             const productsRef = collection(db, 'artifacts', appId, 'products');
             productsUnsubscribe = onSnapshot(productsRef, snapshot => {
                 products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -345,7 +338,6 @@
                 renderCurrentView();
             }, err => console.error("Product listener error:", err));
 
-            // MODIFIED: Removed /users/{userId} from paths
             const salesRef = collection(db, 'artifacts', appId, 'sales');
             const salesQuery = query(salesRef, orderBy("timestamp", "desc"));
             salesUnsubscribe = onSnapshot(salesQuery, snapshot => {
@@ -353,7 +345,6 @@
                 renderCurrentView();
             }, err => console.error("Sales listener error:", err));
 
-            // MODIFIED: Removed /users/{userId} from paths
             const customersRef = collection(db, 'artifacts', appId, 'customers');
             customersUnsubscribe = onSnapshot(customersRef, snapshot => {
                 customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -364,7 +355,6 @@
 
         // --- View Rendering ---
         function renderCurrentView() {
-            // Removed userId check as no longer needed
             switch(currentView) {
                 case 'pos': renderPosView(); break;
                 case 'inventory': renderInventoryView(); break;
@@ -376,7 +366,8 @@
         function renderPosView() {
             views.pos.innerHTML = `
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="lg:col-span-2 order-2 lg:order-1"> <h2 class="text-2xl font-bold mb-4 text-gray-700">Choose a Creation</h2>
+                    <div class="lg:col-span-2 order-2 lg:order-1">
+                        <h2 class="text-2xl font-bold mb-4 text-gray-700">Choose a Creation</h2>
                         <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
                             ${products.length === 0 ? `<div class="col-span-full text-center py-10 bg-white/50 rounded-lg"><p class="text-gray-500">No creations found. Add some in the Inventory tab!</p></div>` : ''}
                             ${products.map(p => `
@@ -446,7 +437,8 @@
                     </button>
                 </div>
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div class="overflow-x-auto"> <table class="min-w-max text-left divide-y divide-gray-200">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-max w-full text-left divide-y divide-gray-200">
                             <thead class="bg-gray-50 border-b border-gray-200">
                                 <tr>
                                     <th class="p-3 md:p-4 font-semibold text-gray-600 whitespace-nowrap text-sm md:text-base">Product</th>
@@ -461,12 +453,13 @@
                                     <tr class="border-b border-gray-200 last:border-b-0 hover:bg-yellow-50/50">
                                         <td class="p-3 md:p-4 flex items-center space-x-3 whitespace-nowrap text-sm md:text-base">
                                             <img src="${p.image || `https://placehold.co/100x100/FBBF24/000000?text=${encodeURIComponent(p.name[0])}`}" class="h-10 w-10 rounded-md object-cover">
-                                            <span class="font-medium truncate">${p.name}</span> </td>
+                                            <span class="font-medium truncate">${p.name}</span>
+                                        </td>
                                         <td class="p-3 md:p-4 whitespace-nowrap text-sm md:text-base">₱${p.price.toFixed(2)}</td>
                                         <td class="p-3 md:p-4 whitespace-nowrap text-sm md:text-base">${p.stock}</td>
                                         <td class="p-3 md:p-4 space-x-2 text-right whitespace-nowrap">
-                                            <button class="edit-product-btn p-2 rounded-md hover:bg-gray-200 transition-colors" data-id="${p.id}" title="Edit"><svg class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
-                                            <button class="delete-product-btn p-2 rounded-md hover:bg-gray-200 transition-colors" data-id="${p.id}" title="Delete"><svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
+                                            <button class="edit-product-btn p-1 md:p-2 rounded-md hover:bg-gray-200 transition-colors w-full sm:w-auto" data-id="${p.id}" title="Edit"><svg class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                                            <button class="delete-product-btn p-1 md:p-2 rounded-md hover:bg-gray-200 transition-colors w-full sm:w-auto" data-id="${p.id}" title="Delete"><svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
                                         </td>
                                     </tr>
                                 `).join('')}
@@ -491,7 +484,7 @@
                 </div>
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="min-w-max text-left divide-y divide-gray-200">
+                        <table class="min-w-max w-full text-left divide-y divide-gray-200">
                                <thead class="bg-gray-50 border-b border-gray-200">
                                    <tr>
                                        <th class="p-3 md:p-4 font-semibold text-gray-600 whitespace-nowrap text-sm md:text-base">Name</th>
@@ -508,8 +501,8 @@
                                            <td class="p-3 md:p-4 text-gray-600 whitespace-nowrap text-sm md:text-base">${c.email || 'N/A'}</td>
                                            <td class="p-3 md:p-4 text-gray-600 whitespace-nowrap text-sm md:text-base">${c.phone || 'N/A'}</td>
                                            <td class="p-3 md:p-4 space-x-2 text-right whitespace-nowrap">
-                                               <button class="edit-customer-btn p-2 rounded-md hover:bg-gray-200" data-id="${c.id}" title="Edit"><svg class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
-                                               <button class="delete-customer-btn p-2 rounded-md hover:bg-gray-200" data-id="${c.id}" title="Delete"><svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
+                                               <button class="edit-customer-btn p-1 md:p-2 rounded-md hover:bg-gray-200" data-id="${c.id}" title="Edit"><svg class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                                               <button class="delete-customer-btn p-1 md:p-2 rounded-md hover:bg-gray-200" data-id="${c.id}" title="Delete"><svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
                                            </td>
                                        </tr>
                                    `).join('')}
@@ -549,7 +542,7 @@
 
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                     <h3 class="p-4 text-lg font-semibold text-gray-700 border-b">Order History & Status</h3>
-                    <div class="overflow-x-auto"> <table class="min-w-max text-left divide-y divide-gray-200">
+                    <div class="overflow-x-auto"> <table class="min-w-max w-full text-left divide-y divide-gray-200">
                             <thead class="bg-gray-50 text-sm text-gray-600">
                                 <tr>
                                     <th class="p-3 whitespace-nowrap text-sm md:text-base">Sales ID</th>
@@ -641,7 +634,6 @@
         async function handleCheckout() {
             const checkoutForm = document.getElementById('checkout-form');
             const customerId = checkoutForm.querySelector('#checkout-customer').value;
-            // No userId to look up customer anymore, so direct name lookup based on selection
             const customerName = customers.find(c => c.id === customerId)?.name || 'Walk-in';
 
             const today = new Date();
@@ -656,17 +648,15 @@
                 paymentMethod: checkoutForm.querySelector('#checkout-payment').value,
                 notes: checkoutForm.querySelector('#checkout-notes').value,
                 status: 'Pending',
-                customerId, // Still record if a customer was selected
+                customerId,
                 customerName,
                 timestamp: serverTimestamp()
             };
 
             try {
-                // MODIFIED: Removed /users/{userId} from path
                 const newSaleRef = doc(collection(db, `artifacts/${appId}/sales`));
 
                 await runTransaction(db, async (transaction) => {
-                    // MODIFIED: Removed /users/{userId} from path
                     const productRefs = saleData.items.map(item => doc(db, 'artifacts', appId, 'products', item.productId));
                     const productDocs = await Promise.all(productRefs.map(ref => transaction.get(ref)));
 
@@ -716,7 +706,6 @@
             if (imageFile) {
                 buttonText.textContent = "Uploading...";
                 try {
-                    // Using FileReader for product images, as they might be less frequent and can be stored as Data URLs
                     imageUrl = await new Promise((resolve, reject) => {
                         const reader = new FileReader();
                         reader.onload = (event) => resolve(event.target.result);
@@ -752,7 +741,6 @@
             }
 
             try {
-                // MODIFIED: Removed /users/{userId} from path
                 if (id) {
                     const productRef = doc(db, 'artifacts', appId, 'products', id);
                     await updateDoc(productRef, productData);
@@ -777,7 +765,6 @@
             const confirmed = await showConfirmModal('Delete Product?', 'This will permanently delete this product. This action cannot be undone.');
             if (confirmed) {
                 try {
-                    // MODIFIED: Removed /users/{userId} from path
                     await deleteDoc(doc(db, 'artifacts', appId, 'products', id));
                     showToast('Product deleted.');
                 } catch (error) {
@@ -802,7 +789,6 @@
             }
 
             try {
-                // MODIFIED: Removed /users/{userId} from path
                 if (id) {
                     const customerRef = doc(db, 'artifacts', appId, 'customers', id);
                     await updateDoc(customerRef, customerData);
@@ -823,7 +809,6 @@
             const confirmed = await showConfirmModal('Delete Customer?', 'This will permanently delete this customer.');
             if (confirmed) {
                 try {
-                    // MODIFIED: Removed /users/{userId} from path
                     await deleteDoc(doc(db, 'artifacts', appId, 'customers', id));
                     showToast('Customer deleted.');
                 } catch (error) {
@@ -834,7 +819,6 @@
         }
 
         async function handleStatusChange(saleId, newStatus) {
-            // MODIFIED: Removed /users/{userId} from path
             const saleRef = doc(db, 'artifacts', appId, 'sales', saleId);
             try {
                 await updateDoc(saleRef, { status: newStatus });
@@ -853,7 +837,7 @@
         function openProductModal(productId = null) {
             const form = document.getElementById('product-form');
             form.reset();
-            document.getElementById('file-name').textContent = 'Upload a Photo';
+            document.getElementById('file-name').textContent = 'Upload a Photo / Take Photo';
             document.getElementById('image-preview').src = 'https://placehold.co/100x100/FEFCE8/CBD5E1?text=Preview';
             form.querySelector('#product-id').value = '';
 
@@ -908,7 +892,6 @@
             closeButton.textContent = isHistoricalView ? "Close" : "New Order";
 
             const saleDate = sale.timestamp ? (typeof sale.timestamp.toDate === 'function' ? sale.timestamp.toDate() : new Date()) : new Date();
-            // Using the hardcoded permanent logo URL
             const logoUrl = PERMANENT_LOGO_URL;
 
             const receiptHTML = `
@@ -986,19 +969,18 @@
             document.body.removeChild(textArea);
         }
 
-        // Modified: Function to set header logo from the hardcoded URL
         function updateHeaderLogo() {
             const headerLogo = document.getElementById('header-logo');
             if (headerLogo) {
                 headerLogo.src = PERMANENT_LOGO_URL;
-                headerLogo.classList.remove('hidden'); // Ensure it's visible
-                headerLogo.setAttribute('alt', "Ellen's Creations Logo"); // Ensure alt text is meaningful
+                headerLogo.classList.remove('hidden');
+                headerLogo.setAttribute('alt', "Ellen's Creations Logo");
             }
         }
 
         function switchView(viewName) {
             currentView = viewName;
-            reportSearchTerm = ''; // Reset search when switching views
+            reportSearchTerm = '';
             Object.values(views).forEach(v => v.classList.add('hidden'));
             Object.values(navTabs).forEach(t => t.classList.remove('tab-active', 'font-semibold'));
             Object.values(navTabs).forEach(t => t.classList.add('tab-inactive'));
@@ -1019,8 +1001,7 @@
             document.getElementById('checkout-form').addEventListener('submit', e => { e.preventDefault(); handleCheckout(); });
             document.getElementById('close-receipt-modal').addEventListener('click', () => {
                 closeModal(modals.receipt);
-                // If closing receipt after a new sale, switch to POS view
-                if (currentView !== 'reports') { // Don't change view if viewing historical receipt
+                if (currentView !== 'reports') {
                     switchView('pos');
                 }
             });
@@ -1039,7 +1020,7 @@
             document.getElementById('download-receipt-btn').addEventListener('click', () => {
                 const receiptElement = document.getElementById('receipt-content-wrapper');
                 const saleIdElement = receiptElement.querySelector('p:nth-of-type(2)');
-                const saleId = saleIdElement ? saleIdElement.textContent.split(': ')[1] : 'sale'; // Safely get sales ID
+                const saleId = saleIdElement ? saleIdElement.textContent.split(': ')[1] : 'sale';
                 html2canvas(receiptElement, { scale: 2 }).then(canvas => {
                     const link = document.createElement('a');
                     link.download = `receipt-${saleId}.jpg`;
@@ -1060,7 +1041,7 @@
                     reader.readAsDataURL(file);
                     fileNameSpan.textContent = file.name;
                 } else {
-                    fileNameSpan.textContent = 'Upload a Photo';
+                    fileNameSpan.textContent = 'Upload a Photo / Take Photo';
                     preview.src = 'https://placehold.co/100x100/FEFCE8/CBD5E1?text=Preview';
                 }
             });
@@ -1072,7 +1053,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             initializeFirebase();
             setupEventListeners();
-            updateHeaderLogo(); // Call on initial load to set logo from the hardcoded URL
+            updateHeaderLogo();
         });
     </script>
 </body>
