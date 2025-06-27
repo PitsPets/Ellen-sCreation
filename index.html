@@ -253,6 +253,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // REMOVED: Authentication imports
 
         // --- App Configuration & State---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pos-app';
@@ -880,7 +881,7 @@
         function openCheckoutModal() {
             if (cart.length === 0) return;
             const select = document.getElementById('checkout-customer');
-            select.innerHTML = `<option value="">Walk-in Customer</option>` +
+            select.innerHTML = `<option value="">Select Customer</option>` +
                                customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             openModal(modals.checkout);
         }
