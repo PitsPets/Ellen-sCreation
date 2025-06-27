@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ellen's Creations - POS System</title>
 
-    <link rel="icon" href="https://example.com/ellen_creations_logo.png">
+    <link rel="icon" href="https://i.imgur.com/qGxcYJ8.jpeg">
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -117,7 +117,7 @@
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20 flex-wrap">
                     <div id="logo-container" class="flex items-center space-x-4">
-                        <img id="header-logo" src="https://example.com/ellen_creations_logo.png" alt="Ellen's Creations Logo" class="h-12 object-contain">
+                        <img id="header-logo" src="https://i.imgur.com/qGxcYJ8.jpeg" alt="Ellen's Creations Logo" class="h-12 object-contain">
                         <h1 class="font-pacifico text-3xl text-gray-800">Ellen's Creations</h1>
                     </div>
                     <nav class="flex space-x-1 sm:space-x-4">
@@ -125,7 +125,7 @@
                         <button id="nav-inventory" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Inventory</button>
                         <button id="nav-customers" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Customers</button>
                         <button id="nav-reports" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Reports</button>
-                        </nav>
+                    </nav>
                 </div>
             </div>
         </header>
@@ -135,7 +135,7 @@
             <div id="inventory-view" class="hidden"></div>
             <div id="customers-view" class="hidden"></div>
             <div id="reports-view" class="hidden"></div>
-            </main>
+        </main>
 
         <div id="loading-state" class="text-center py-20 no-print">
             <p class="text-yellow-600 text-lg">Loading your beautiful creations...</p>
@@ -260,7 +260,7 @@
         // --- App Configuration & State---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pos-app';
 
-        // YOUR PROVIDED FIREBASE CONFIGURATION - THIS IS NOW CORRECTLY PLACED
+        // YOUR PROVIDED FIREBASE CONFIGURATION - This is now correctly placed
         const firebaseConfig = {
             apiKey: "AIzaSyCzq9xJvubPS3u3-FW9EamNfZMt-8BDmzE",
             authDomain: "ellen-s-creation.firebaseapp.com",
@@ -272,8 +272,8 @@
         };
 
         // --- Hardcoded Logo URL ---
-        // REPLACE THIS URL WITH THE PERMANENT URL OF YOUR LOGO
-        const PERMANENT_LOGO_URL = "https://example.com/ellen_creations_logo.png";
+        // Using the direct Imgur image URL you provided
+        const PERMANENT_LOGO_URL = "https://i.imgur.com/qGxcYJ8.jpeg";
 
 
         let db, auth, userId = null;
@@ -304,7 +304,7 @@
         };
         const modals = {
             product: document.getElementById('product-modal'),
-            customer: document.getElementById('customer-modal'), // FIXED: Syntax error corrected
+            customer: document.getElementById('customer-modal'),
             checkout: document.getElementById('checkout-modal'),
             receipt: document.getElementById('receipt-modal'),
             confirm: document.getElementById('confirm-modal')
@@ -905,8 +905,8 @@
                     document.getElementById('customer-modal-title').textContent = "Edit Customer";
                     form.querySelector('#customer-id').value = customerId;
                     form.querySelector('#customer-name').value = customer.name;
-                    form.querySelector('#customer-email').value = customer.email || '';
-                    document.getElementById('customer-phone').value = customer.phone || ''; // Corrected getElementById
+                    document.getElementById('customer-email').value = customer.email || '';
+                    document.getElementById('customer-phone').value = customer.phone || '';
                 }
             }
             openModal(modals.customer);
