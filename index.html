@@ -253,13 +253,13 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // REMOVED: Firebase Storage imports as they are no longer needed
+        // REMOVED: Authentication imports
+        // import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // --- App Configuration & State---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pos-app';
 
-        // YOUR PROVIDED FIREBASE CONFIGURATION - This is now correctly placed
+        // YOUR PROVIDED FIREBASE CONFIGURATION
         const firebaseConfig = {
             apiKey: "AIzaSyCzq9xJvubPS3u3-FW9EamNfZMt-8BDmzE",
             authDomain: "ellen-s-creation.firebaseapp.com",
@@ -271,19 +271,16 @@
         };
 
         // --- Hardcoded Logo URL ---
-        // Using the direct Imgur image URL you provided
         const PERMANENT_LOGO_URL = "https://i.imgur.com/qGxcYJ8.jpeg";
 
 
-        let db, auth, userId = null;
-        // REMOVED: storage variable
-        // REMOVED: appSettings variable - no longer dynamic
+        let db; // REMOVED: auth variable
+        // REMOVED: userId variable - no longer needed as data is global
         let products = [], sales = [], customers = [];
         let cart = [];
         let currentView = 'pos';
         let reportSearchTerm = '';
         let productsUnsubscribe, salesUnsubscribe, customersUnsubscribe = null;
-        // REMOVED: settingsUnsubscribe - no longer needed
         let resolveConfirm;
 
         // --- UI Element Groups ---
@@ -307,9 +304,8 @@
             confirm: document.getElementById('confirm-modal')
         };
 
-        // --- Firebase Initialization and Auth ---
+        // --- Firebase Initialization ---
         async function initializeFirebase() {
-            // Check if Firebase config is minimally present.
             if (!firebaseConfig.projectId || !firebaseConfig.apiKey) {
                 showToast("Firebase configuration is incomplete. Please ensure projectId and apiKey are set.", 'error');
                 document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-lg p-4"><b>Configuration Error:</b> Your Firebase configuration is incomplete. Please check the script section.</p>`;
@@ -318,56 +314,48 @@
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
-                auth = getAuth(app);
+                // REMOVED: auth initialization
 
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        await setupDataListeners();
-                        document.getElementById('loading-state').classList.add('hidden');
-                        document.getElementById('main-content').classList.remove('hidden');
-                        switchView(currentView);
-                        updateHeaderLogo(); // Ensure logo is visible on auth state change
-                    } else {
-                        try {
-                            await signInAnonymously(auth);
-                        } catch (error) {
-                            console.error("Anonymous sign-in failed:", error);
-                            showToast("Authentication failed. Please check your Firebase settings.", 'error');
-                            document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-lg p-4"><b>Authentication Error:</b> Could not sign in. <br>Please ensure <b>Anonymous Auth</b> is enabled in your Firebase project and that your <b>Firestore Rules</b> are correctly set up.</p>`;
-                        }
-                    }
-                });
+                // Directly set up listeners as there's no auth state to wait for
+                await setupDataListeners();
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                switchView(currentView);
+                updateHeaderLogo(); // Ensure logo is visible on load
+
             } catch (error) {
                 console.error("Error initializing Firebase:", error);
                 showToast("Could not connect to the database. Check console for details.", 'error');
+                document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-lg p-4"><b>Initialization Error:</b> Could not connect to Firebase. Check your configuration and browser console.</p>`;
             }
         }
 
         // --- Data Listeners ---
+        // MODIFIED: No longer depends on userId
         async function setupDataListeners() {
-            if (!userId) return;
-
             // Unsubscribe existing listeners to prevent multiple subscriptions
             if (productsUnsubscribe) productsUnsubscribe();
             if (salesUnsubscribe) salesUnsubscribe();
             if (customersUnsubscribe) customersUnsubscribe();
 
-            const productsRef = collection(db, 'artifacts', appId, 'users', userId, 'products');
+            // MODIFIED: Removed /users/{userId} from paths
+            const productsRef = collection(db, 'artifacts', appId, 'products');
             productsUnsubscribe = onSnapshot(productsRef, snapshot => {
                 products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 products.sort((a, b) => a.name.localeCompare(b.name));
                 renderCurrentView();
             }, err => console.error("Product listener error:", err));
 
-            const salesRef = collection(db, 'artifacts', appId, 'users', userId, 'sales');
+            // MODIFIED: Removed /users/{userId} from paths
+            const salesRef = collection(db, 'artifacts', appId, 'sales');
             const salesQuery = query(salesRef, orderBy("timestamp", "desc"));
             salesUnsubscribe = onSnapshot(salesQuery, snapshot => {
                 sales = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderCurrentView();
             }, err => console.error("Sales listener error:", err));
 
-            const customersRef = collection(db, 'artifacts', appId, 'users', userId, 'customers');
+            // MODIFIED: Removed /users/{userId} from paths
+            const customersRef = collection(db, 'artifacts', appId, 'customers');
             customersUnsubscribe = onSnapshot(customersRef, snapshot => {
                 customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 customers.sort((a,b) => a.name.localeCompare(b.name));
@@ -377,7 +365,7 @@
 
         // --- View Rendering ---
         function renderCurrentView() {
-            if (!userId) return;
+            // Removed userId check as no longer needed
             switch(currentView) {
                 case 'pos': renderPosView(); break;
                 case 'inventory': renderInventoryView(); break;
@@ -624,6 +612,7 @@
         async function handleCheckout() {
             const checkoutForm = document.getElementById('checkout-form');
             const customerId = checkoutForm.querySelector('#checkout-customer').value;
+            // No userId to look up customer anymore, so direct name lookup based on selection
             const customerName = customers.find(c => c.id === customerId)?.name || 'Walk-in';
 
             const today = new Date();
@@ -638,16 +627,18 @@
                 paymentMethod: checkoutForm.querySelector('#checkout-payment').value,
                 notes: checkoutForm.querySelector('#checkout-notes').value,
                 status: 'Pending',
-                customerId,
+                customerId, // Still record if a customer was selected
                 customerName,
                 timestamp: serverTimestamp()
             };
 
             try {
-                const newSaleRef = doc(collection(db, `artifacts/${appId}/users/${userId}/sales`));
+                // MODIFIED: Removed /users/{userId} from path
+                const newSaleRef = doc(collection(db, `artifacts/${appId}/sales`));
 
                 await runTransaction(db, async (transaction) => {
-                    const productRefs = saleData.items.map(item => doc(db, 'artifacts', appId, 'users', userId, 'products', item.productId));
+                    // MODIFIED: Removed /users/{userId} from path
+                    const productRefs = saleData.items.map(item => doc(db, 'artifacts', appId, 'products', item.productId));
                     const productDocs = await Promise.all(productRefs.map(ref => transaction.get(ref)));
 
                     for(let i = 0; i < productDocs.length; i++) {
@@ -732,19 +723,20 @@
             }
 
             try {
+                // MODIFIED: Removed /users/{userId} from path
                 if (id) {
-                    const productRef = doc(db, 'artifacts', appId, 'users', userId, 'products', id);
+                    const productRef = doc(db, 'artifacts', appId, 'products', id);
                     await updateDoc(productRef, productData);
                     showToast('Product updated successfully!');
                 } else {
-                    const productsRef = collection(db, 'artifacts', appId, 'users', userId, 'products');
+                    const productsRef = collection(db, 'artifacts', appId, 'products');
                     await addDoc(productsRef, productData);
                     showToast('Product added successfully!');
                 }
                 closeModal(modals.product);
             } catch (error) {
                 console.error("Error saving product:", error);
-                showToast('Failed to save product. Check permissions.', 'error');
+                showToast('Failed to save product. Check permissions.", 'error');
             } finally {
                 saveButton.disabled = false;
                 buttonText.textContent = "Save Product";
@@ -756,7 +748,8 @@
             const confirmed = await showConfirmModal('Delete Product?', 'This will permanently delete this product. This action cannot be undone.');
             if (confirmed) {
                 try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'products', id));
+                    // MODIFIED: Removed /users/{userId} from path
+                    await deleteDoc(doc(db, 'artifacts', appId, 'products', id));
                     showToast('Product deleted.');
                 } catch (error) {
                     console.error("Error deleting product:", error);
@@ -780,12 +773,13 @@
             }
 
             try {
+                // MODIFIED: Removed /users/{userId} from path
                 if (id) {
-                    const customerRef = doc(db, 'artifacts', appId, 'users', userId, 'customers', id);
+                    const customerRef = doc(db, 'artifacts', appId, 'customers', id);
                     await updateDoc(customerRef, customerData);
                     showToast('Customer updated!');
                 } else {
-                    const customersRef = collection(db, 'artifacts', appId, 'users', userId, 'customers');
+                    const customersRef = collection(db, 'artifacts', appId, 'customers');
                     await addDoc(customersRef, customerData);
                     showToast('Customer added!');
                 }
@@ -800,7 +794,8 @@
             const confirmed = await showConfirmModal('Delete Customer?', 'This will permanently delete this customer.');
             if (confirmed) {
                 try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'customers', id));
+                    // MODIFIED: Removed /users/{userId} from path
+                    await deleteDoc(doc(db, 'artifacts', appId, 'customers', id));
                     showToast('Customer deleted.');
                 } catch (error) {
                     console.error("Error deleting customer:", error);
@@ -810,7 +805,8 @@
         }
 
         async function handleStatusChange(saleId, newStatus) {
-            const saleRef = doc(db, 'artifacts', appId, 'users', userId, 'sales', saleId);
+            // MODIFIED: Removed /users/{userId} from path
+            const saleRef = doc(db, 'artifacts', appId, 'sales', saleId);
             try {
                 await updateDoc(saleRef, { status: newStatus });
                 showToast(`Order status updated to "${newStatus}".`);
@@ -966,9 +962,7 @@
             const headerLogo = document.getElementById('header-logo');
             if (headerLogo) {
                 headerLogo.src = PERMANENT_LOGO_URL;
-                // The 'hidden' class on the img tag is initially set in HTML
-                // We remove it here to make the logo visible once the URL is set.
-                headerLogo.classList.remove('hidden');
+                headerLogo.classList.remove('hidden'); // Ensure it's visible
                 headerLogo.setAttribute('alt', "Ellen's Creations Logo"); // Ensure alt text is meaningful
             }
         }
