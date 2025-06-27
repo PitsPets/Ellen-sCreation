@@ -258,7 +258,7 @@
         // --- App Configuration & State---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pos-app';
 
-        // YOUR PROVIDED FIREBASE CONFIGURATION
+        // YOUR PROVIDED FIREBASE CONFIGURATION - This is now correctly placed
         const firebaseConfig = {
             apiKey: "AIzaSyCzq9xJvubPS3u3-FW9EamNfZMt-8BDmzE",
             authDomain: "ellen-s-creation.firebaseapp.com",
@@ -896,7 +896,7 @@
         function openCheckoutModal() {
             if (cart.length === 0) return;
             const select = document.getElementById('checkout-customer');
-            select.innerHTML = `<option value="">Walk-in Customer</option>` +
+            select.innerHTML = `<option value="">Select Customer</option>` +
                                customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             openModal(modals.checkout);
         }
