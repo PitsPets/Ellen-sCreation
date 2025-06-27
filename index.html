@@ -261,15 +261,16 @@
         // --- App Configuration & State---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pos-app';
 
-        // !! IMPORTANT: REPLACE WITH YOUR ACTUAL FIREBASE CONFIGURATION !!
+        // !! IMPORTANT: THIS IS YOUR PROVIDED FIREBASE CONFIGURATION !!
+        // It has been correctly inserted here.
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY", // Replace with your actual Firebase project API Key
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com", // Replace with your actual Firebase project ID
-            projectId: "YOUR_PROJECT_ID", // Replace with your actual Firebase project ID
-            storageBucket: "YOUR_PROJECT_ID.appspot.com", // Replace with your actual Firebase project ID
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Replace with your actual Messaging Sender ID
-            appId: "YOUR_APP_ID", // Replace with your actual App ID
-            measurementId: "YOUR_MEASUREMENT_ID" // Replace with your actual Measurement ID (if using Analytics)
+            apiKey: "AIzaSyCzq9xJvubPS3u3-FW9EamNfZMt-8BDmzE",
+            authDomain: "ellen-s-creation.firebaseapp.com",
+            projectId: "ellen-s-creation",
+            storageBucket: "ellen-s-creation.appspot.com",
+            messagingSenderId: "497462015691",
+            appId: "1:497462015691:web:52ac68f784171151d8cd4e",
+            measurementId: "G-8WPR5J0F5M"
         };
 
 
@@ -309,9 +310,11 @@
 
         // --- Firebase Initialization and Auth ---
         async function initializeFirebase() {
-            if (!firebaseConfig || !firebaseConfig.projectId || firebaseConfig.apiKey === "YOUR_API_KEY") {
-                showToast("Firebase configuration is missing or invalid. Please update firebaseConfig.", 'error');
-                document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-lg p-4"><b>Configuration Error:</b> Please update your Firebase configuration in the script section (apiKey, projectId, etc.).</p>`;
+            // Simplified check, assuming the provided config is complete.
+            // A more robust check might verify each field.
+            if (!firebaseConfig.projectId || !firebaseConfig.apiKey) {
+                showToast("Firebase configuration is incomplete. Please ensure projectId and apiKey are set.", 'error');
+                document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-lg p-4"><b>Configuration Error:</b> Your Firebase configuration is incomplete. Please check the script section.</p>`;
                 return;
             }
             try {
@@ -860,7 +863,7 @@
                     // Using FileReader for product images, as they might be less frequent and can be stored as Data URLs
                     imageUrl = await new Promise((resolve, reject) => {
                         const reader = new FileReader();
-                        reader.onload = () => resolve(reader.result);
+                        reader.onload = (event) => resolve(event.target.result);
                         reader.onerror = error => reject(error);
                         reader.readAsDataURL(imageFile);
                     });
@@ -988,8 +991,6 @@
                 return;
             }
 
-            // showToast("Uploading logo...", "info"); // This toast is now managed by the button state in renderSettingsView
-
             const logoRef = ref(storage, `artifacts/${appId}/users/${userId}/branding/logo.jpg`); // Standard path for logo
 
             try {
@@ -1019,7 +1020,6 @@
             const logoRef = ref(storage, `artifacts/${appId}/users/${userId}/branding/logo.jpg`);
 
             try {
-                // showToast("Removing logo...", "info"); // This toast is now managed by the button state in renderSettingsView
                 await deleteObject(logoRef); // Delete from Firebase Storage
 
                 const settingsDocRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'app_config');
@@ -1192,7 +1192,7 @@
                     headerLogo.classList.remove('hidden'); // Ensure it's visible if there's a logo
                     headerLogo.setAttribute('alt', "Store Logo"); // Update alt text
                 } else {
-                    // If no logo, hide the image and potentially show a default text or just rely on H1
+                    // If no logo, hide the image and just rely on H1
                     headerLogo.src = ''; // Clear src
                     headerLogo.classList.add('hidden'); // Hide the image element
                     headerLogo.setAttribute('alt', ""); // Clear alt text
