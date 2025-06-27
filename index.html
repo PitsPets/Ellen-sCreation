@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ellen's Creations - POS System</title>
 
-    <link rel="icon" href="https://i.ibb.co/LzbQ8TJ/386471846-165581799940367-5700032273973764961-n-1.jpg">
+    <link rel="icon" href="https://placehold.co/32x32/FEFCE8/CBD5E1?text=EC">
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -117,7 +117,7 @@
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20 flex-wrap">
                     <div id="logo-container" class="flex items-center space-x-4">
-                        <img id="header-logo" src="https://i.ibb.co/LzbQ8TJ/386471846-165581799940367-5700032273973764961-n-1.jpg" alt="Ellen's Creations Logo" class="h-12 object-contain">
+                        <img id="header-logo" src="" alt="Ellen's Creations Logo" class="h-12 object-contain hidden">
                         <h1 class="font-pacifico text-3xl text-gray-800">Ellen's Creations</h1>
                     </div>
                     <nav class="flex space-x-1 sm:space-x-4">
@@ -261,15 +261,17 @@
         // --- App Configuration & State---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pos-app';
 
+        // !! IMPORTANT: REPLACE WITH YOUR ACTUAL FIREBASE CONFIGURATION !!
         const firebaseConfig = {
-            apiKey: "AIzaSyCzq9xJvubPS3u3-FW9EamNfZMt-8BDmzE",
-            authDomain: "ellen-s-creation.firebaseapp.com",
-            projectId: "ellen-s-creation",
-            storageBucket: "ellen-s-creation.appspot.com",
-            messagingSenderId: "497462015691",
-            appId: "1:497462015691:web:52ac68f784171151d8cd4e",
-            measurementId: "G-8WPR5J0F5M"
+            apiKey: "YOUR_API_KEY", // Replace with your actual Firebase project API Key
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com", // Replace with your actual Firebase project ID
+            projectId: "YOUR_PROJECT_ID", // Replace with your actual Firebase project ID
+            storageBucket: "YOUR_PROJECT_ID.appspot.com", // Replace with your actual Firebase project ID
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Replace with your actual Messaging Sender ID
+            appId: "YOUR_APP_ID", // Replace with your actual App ID
+            measurementId: "YOUR_MEASUREMENT_ID" // Replace with your actual Measurement ID (if using Analytics)
         };
+
 
         let db, auth, userId = null;
         let storage = null; // ADDED: Firebase Storage instance
@@ -299,7 +301,7 @@
         };
         const modals = {
             product: document.getElementById('product-modal'),
-            customer: document:getElementById('customer-modal'),
+            customer: document.getElementById('customer-modal'), // FIXED: Syntax error here
             checkout: document.getElementById('checkout-modal'),
             receipt: document.getElementById('receipt-modal'),
             confirm: document.getElementById('confirm-modal')
@@ -307,8 +309,9 @@
 
         // --- Firebase Initialization and Auth ---
         async function initializeFirebase() {
-            if (!firebaseConfig || !firebaseConfig.projectId) {
-                showToast("Firebase configuration is missing or invalid.", 'error');
+            if (!firebaseConfig || !firebaseConfig.projectId || firebaseConfig.apiKey === "YOUR_API_KEY") {
+                showToast("Firebase configuration is missing or invalid. Please update firebaseConfig.", 'error');
+                document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-lg p-4"><b>Configuration Error:</b> Please update your Firebase configuration in the script section (apiKey, projectId, etc.).</p>`;
                 return;
             }
             try {
@@ -337,7 +340,7 @@
                 });
             } catch (error) {
                 console.error("Error initializing Firebase:", error);
-                showToast("Could not connect to the database.", 'error');
+                showToast("Could not connect to the database. Check console for details.", 'error');
             }
         }
 
@@ -345,10 +348,11 @@
         async function setupDataListeners() {
             if (!userId) return;
 
+            // Unsubscribe existing listeners to prevent multiple subscriptions
             if (productsUnsubscribe) productsUnsubscribe();
             if (salesUnsubscribe) salesUnsubscribe();
             if (customersUnsubscribe) customersUnsubscribe();
-            if (settingsUnsubscribe) settingsUnsubscribe(); // ADDED: Unsubscribe previous settings listener
+            if (settingsUnsubscribe) settingsUnsubscribe();
 
             const productsRef = collection(db, 'artifacts', appId, 'users', userId, 'products');
             productsUnsubscribe = onSnapshot(productsRef, snapshot => {
@@ -712,6 +716,10 @@
                     selectedLogoFile = null; // Clear the selected file after successful upload
                     logoFileNameSpan.textContent = 'Select New Logo'; // Reset label
                     saveLogoBtn.disabled = true; // Disable button until new file is selected
+                } catch (error) {
+                    // Error handled in uploadLogo, but reset button state here too
+                    console.error("Error during logo upload via submit:", error);
+                    // Toast message is already shown by uploadLogo
                 } finally {
                     saveLogoText.textContent = "Save Logo";
                     saveLogoLoader.classList.add('hidden');
@@ -722,10 +730,16 @@
                 const confirmed = await showConfirmModal('Remove Logo?', 'Are you sure you want to remove your store logo? It will be replaced by the default text.');
                 if (confirmed) {
                     removeLogoBtn.disabled = true; // Disable while processing
-                    await removeLogo();
-                    removeLogoBtn.disabled = false; // Re-enable if needed (though it will be hidden by re-render)
-                    saveLogoBtn.disabled = true; // Also disable save button
-                    logoFileNameSpan.textContent = 'Select New Logo'; // Reset label
+                    try {
+                        await removeLogo();
+                        removeLogoBtn.classList.add('hidden'); // Hide after successful removal
+                        saveLogoBtn.disabled = true; // Also disable save button
+                        logoFileNameSpan.textContent = 'Select New Logo'; // Reset label
+                    } catch (error) {
+                        // Error handled in removeLogo, but re-enable button if something went wrong
+                        console.error("Error during logo removal via click:", error);
+                        removeLogoBtn.disabled = false;
+                    }
                 }
             });
 
@@ -974,7 +988,7 @@
                 return;
             }
 
-            // showToast("Uploading logo...", "info"); // Already handled by button state
+            // showToast("Uploading logo...", "info"); // This toast is now managed by the button state in renderSettingsView
 
             const logoRef = ref(storage, `artifacts/${appId}/users/${userId}/branding/logo.jpg`); // Standard path for logo
 
@@ -1005,7 +1019,7 @@
             const logoRef = ref(storage, `artifacts/${appId}/users/${userId}/branding/logo.jpg`);
 
             try {
-                // showToast("Removing logo...", "info"); // Already handled by button state
+                // showToast("Removing logo...", "info"); // This toast is now managed by the button state in renderSettingsView
                 await deleteObject(logoRef); // Delete from Firebase Storage
 
                 const settingsDocRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'app_config');
