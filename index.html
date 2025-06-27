@@ -258,7 +258,7 @@
         // --- App Configuration & State---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pos-app';
 
-        // YOUR PROVIDED FIREBASE CONFIGURATION - This is now correctly placed
+        // YOUR PROVIDED FIREBASE CONFIGURATION
         const firebaseConfig = {
             apiKey: "AIzaSyCzq9xJvubPS3u3-FW9EamNfZMt-8BDmzE",
             authDomain: "ellen-s-creation.firebaseapp.com",
@@ -576,7 +576,7 @@
                                             ${s.timestamp ? new Date(s.timestamp.toDate()).toLocaleString() : 'N/A'}
                                         </td>
                                         <td class="p-3 font-medium whitespace-nowrap text-sm md:text-base">
-                                            <select class="status-select text-sm rounded-md border-gray-300 shadow-sm focus:border-yellow-300 focus:ring focus:ring-yellow-200 focus:ring-opacity-50" data-sale-id="${s.id}">
+                                            <select class="status-select text-sm md:text-base rounded-md border-gray-300 shadow-sm focus:border-yellow-300 focus:ring focus:ring-yellow-200 focus:ring-opacity-50" data-sale-id="${s.id}">
                                                 <option value="Pending" ${s.status === 'Pending' ? 'selected' : ''}>Pending</option>
                                                 <option value="In Production" ${s.status === 'In Production' ? 'selected' : ''}>In Production</option>
                                                 <option value="Completed" ${s.status === 'Completed' ? 'selected' : ''}>Completed</option>
