@@ -114,23 +114,23 @@
     <div id="app" class="min-h-screen">
 
         <header class="bg-white/80 backdrop-blur-sm shadow-md sticky top-0 z-20 no-print">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex flex-col sm:flex-row items-center sm:justify-between h-auto sm:h-20 py-4 sm:py-0 flex-wrap gap-4">
-                    <div id="logo-container" class="flex items-center space-x-2 sm:space-x-4">
-                        <img id="header-logo" src="https://i.imgur.com/qGxcYJ8.jpeg" alt="Ellen's Creations Logo" class="h-16 sm:h-20 object-contain">
-                        <h1 class="font-pacifico text-2xl sm:text-3xl text-gray-800">Ellen's Creations</h1>
+            <div class="container mx-auto px-4 lg:px-8">
+                <div class="flex items-center justify-between h-20 py-4 flex-wrap gap-4">
+                    <div id="logo-container" class="flex items-center space-x-4">
+                        <img id="header-logo" src="https://i.imgur.com/qGxcYJ8.jpeg" alt="Ellen's Creations Logo" class="h-24 object-contain">
+                        <h1 class="font-pacifico text-3xl text-gray-800">Ellen's Creations</h1>
                     </div>
-                    <nav class="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2 md:space-x-4 w-full sm:w-auto items-center">
-                        <button id="nav-pos" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300 w-full sm:w-auto">POS</button>
-                        <button id="nav-inventory" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300 w-full sm:w-auto">Inventory</button>
-                        <button id="nav-customers" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300 w-full sm:w-auto">Customers</button>
-                        <button id="nav-reports" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300 w-full sm:w-auto">Reports</button>
+                    <nav class="flex space-x-4 w-auto items-center">
+                        <button id="nav-pos" class="nav-tab text-base py-2 px-3 border-b-2 transition-colors duration-300 w-auto">POS</button>
+                        <button id="nav-inventory" class="nav-tab text-base py-2 px-3 border-b-2 transition-colors duration-300 w-auto">Inventory</button>
+                        <button id="nav-customers" class="nav-tab text-base py-2 px-3 border-b-2 transition-colors duration-300 w-auto">Customers</button>
+                        <button id="nav-reports" class="nav-tab text-base py-2 px-3 border-b-2 transition-colors duration-300 w-auto">Reports</button>
                     </nav>
                 </div>
             </div>
         </header>
 
-        <main id="main-content" class="hidden container mx-auto p-4 sm:p-6 lg:p-8 no-print">
+        <main id="main-content" class="hidden container mx-auto p-4 lg:p-8 no-print">
             <div id="pos-view" class="hidden"></div>
             <div id="inventory-view" class="hidden"></div>
             <div id="customers-view" class="hidden"></div>
@@ -255,12 +255,11 @@
         import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         // REMOVED: Firebase Storage imports as they are no longer needed
-        // import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // --- App Configuration & State---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pos-app';
 
-        // YOUR PROVIDED FIREBASE CONFIGURATION
+        // YOUR PROVIDED FIREBASE CONFIGURATION - This is now correctly placed
         const firebaseConfig = {
             apiKey: "AIzaSyCzq9xJvubPS3u3-FW9EamNfZMt-8BDmzE",
             authDomain: "ellen-s-creation.firebaseapp.com",
@@ -293,14 +292,12 @@
             inventory: document.getElementById('inventory-view'),
             customers: document.getElementById('customers-view'),
             reports: document.getElementById('reports-view'),
-            // REMOVED: settings view
         };
         const navTabs = {
             pos: document.getElementById('nav-pos'),
             inventory: document.getElementById('nav-inventory'),
             customers: document.getElementById('nav-customers'),
             reports: document.getElementById('nav-reports'),
-            // REMOVED: settings navigation tab
         };
         const modals = {
             product: document.getElementById('product-modal'),
@@ -322,7 +319,6 @@
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                // REMOVED: storage initialization
 
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
@@ -356,7 +352,6 @@
             if (productsUnsubscribe) productsUnsubscribe();
             if (salesUnsubscribe) salesUnsubscribe();
             if (customersUnsubscribe) customersUnsubscribe();
-            // REMOVED: settingsUnsubscribe as there are no dynamic settings listeners anymore
 
             const productsRef = collection(db, 'artifacts', appId, 'users', userId, 'products');
             productsUnsubscribe = onSnapshot(productsRef, snapshot => {
@@ -378,8 +373,6 @@
                 customers.sort((a,b) => a.name.localeCompare(b.name));
                 renderCurrentView();
             }, err => console.error("Customer listener error:", err));
-
-            // REMOVED: Listener for app settings (no dynamic settings)
         }
 
         // --- View Rendering ---
@@ -390,15 +383,14 @@
                 case 'inventory': renderInventoryView(); break;
                 case 'customers': renderCustomersView(); break;
                 case 'reports': renderReportsView(); break;
-                // REMOVED: settings view rendering
             }
         }
 
         function renderPosView() {
             views.pos.innerHTML = `
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="lg:col-span-2 order-2 lg:order-1"> <h2 class="text-2xl font-bold mb-4 text-gray-700">Choose a Creation</h2>
-                        <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+                    <div class="lg:col-span-2"> <h2 class="text-2xl font-bold mb-4 text-gray-700">Choose a Creation</h2>
+                        <div id="product-grid" class="grid grid-cols-5 gap-4">
                             ${products.length === 0 ? `<div class="col-span-full text-center py-10 bg-white/50 rounded-lg"><p class="text-gray-500">No creations found. Add some in the Inventory tab!</p></div>` : ''}
                             ${products.map(p => `
                                 <div class="product-card bg-white rounded-xl shadow-md overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer ${p.stock <= 0 ? 'opacity-50 grayscale cursor-not-allowed' : ''}" data-id="${p.id}">
@@ -411,7 +403,7 @@
                                 </div>`).join('')}
                         </div>
                     </div>
-                    <div id="cart-container" class="bg-white p-6 rounded-2xl shadow-lg h-fit sticky top-28 w-full order-1 lg:order-2 mb-8 lg:mb-0"></div>
+                    <div id="cart-container" class="bg-white p-6 rounded-2xl shadow-lg h-fit sticky top-28 w-full"> </div>
                 </div>`;
             renderCart();
             views.pos.querySelectorAll('.product-card').forEach(card => {
@@ -459,33 +451,24 @@
 
         function renderInventoryView() {
             views.inventory.innerHTML = `
-                <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                    <h2 class="text-2xl font-bold text-gray-700">Inventory Management</h2>
-                    <button id="add-product-btn" class="bg-yellow-400 text-black px-5 py-2 rounded-lg hover:bg-yellow-500 flex items-center space-x-2 shadow hover:shadow-lg transition-shadow w-full sm:w-auto">
-                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                <div class="flex justify-between items-center mb-6 gap-4"> <h2 class="text-2xl font-bold text-gray-700">Inventory Management</h2>
+                    <button id="add-product-btn" class="bg-yellow-400 text-black px-5 py-2 rounded-lg hover:bg-yellow-500 flex items-center space-x-2 shadow hover:shadow-lg transition-shadow w-auto"> <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                         <span>Add Product</span>
                     </button>
                 </div>
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div class="overflow-x-auto"> <table class="min-w-full text-left divide-y divide-gray-200">
+                    <div class="overflow-x-auto"> <table class="min-w-max text-left divide-y divide-gray-200">
                             <thead class="bg-gray-50 border-b border-gray-200">
                                 <tr>
-                                    <th class="p-4 font-semibold text-gray-600 whitespace-nowrap">Product</th>
-                                    <th class="p-4 font-semibold text-gray-600 whitespace-nowrap">Price</th>
-                                    <th class="p-4 font-semibold text-gray-600 whitespace-nowrap">Stock</th>
-                                    <th class="p-4 font-semibold text-gray-600 text-right whitespace-nowrap">Actions</th>
-                                </tr>
+                                    <th class="p-4 font-semibold text-gray-600 whitespace-nowrap">Product</th> <th class="p-4 font-semibold text-gray-600 whitespace-nowrap">Price</th> <th class="p-4 font-semibold text-gray-600 whitespace-nowrap">Stock</th> <th class="p-4 font-semibold text-gray-600 text-right whitespace-nowrap">Actions</th> </tr>
                             </thead>
                             <tbody>
                                 ${products.length === 0 ? `<tr><td colspan="4" class="text-center p-8 text-gray-500">No products in inventory.</td></tr>` : ''}
                                 ${products.map(p => `
                                     <tr class="border-b border-gray-200 last:border-b-0 hover:bg-yellow-50/50">
-                                        <td class="p-4 flex items-center space-x-3 whitespace-nowrap">
-                                            <img src="${p.image || `https://placehold.co/100x100/FBBF24/000000?text=${encodeURIComponent(p.name[0])}`}" class="h-10 w-10 rounded-md object-cover">
+                                        <td class="p-4 flex items-center space-x-3 whitespace-nowrap"> <img src="${p.image || `https://placehold.co/100x100/FBBF24/000000?text=${encodeURIComponent(p.name[0])}`}" class="h-10 w-10 rounded-md object-cover">
                                             <span class="font-medium truncate">${p.name}</span> </td>
-                                        <td class="p-4 whitespace-nowrap">₱${p.price.toFixed(2)}</td>
-                                        <td class="p-4 whitespace-nowrap">${p.stock}</td>
-                                        <td class="p-4 space-x-2 text-right whitespace-nowrap">
+                                        <td class="p-4 whitespace-nowrap">₱${p.price.toFixed(2)}</td> <td class="p-4 whitespace-nowrap">${p.stock}</td> <td class="p-4 space-x-2 text-right whitespace-nowrap">
                                             <button class="edit-product-btn p-2 rounded-md hover:bg-gray-200 transition-colors" data-id="${p.id}" title="Edit"><svg class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
                                             <button class="delete-product-btn p-2 rounded-md hover:bg-gray-200 transition-colors" data-id="${p.id}" title="Delete"><svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
                                         </td>
@@ -503,32 +486,23 @@
 
         function renderCustomersView() {
             views.customers.innerHTML = `
-                <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                    <h2 class="text-2xl font-bold text-gray-700">Customer Management</h2>
-                    <button id="add-customer-btn" class="bg-yellow-400 text-black px-5 py-2 rounded-lg hover:bg-yellow-500 flex items-center space-x-2 shadow hover:shadow-lg transition-shadow w-full sm:w-auto">
-                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 11a1 1 0 100-2 1 1 0 000 2z"/></svg>
+                <div class="flex justify-between items-center mb-6 gap-4"> <h2 class="text-2xl font-bold text-gray-700">Customer Management</h2>
+                    <button id="add-customer-btn" class="bg-yellow-400 text-black px-5 py-2 rounded-lg hover:bg-yellow-500 flex items-center space-x-2 shadow hover:shadow-lg transition-shadow w-auto"> <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 11a1 1 0 100-2 1 1 0 000 2z"/></svg>
                         <span>Add Customer</span>
                     </button>
                 </div>
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full text-left divide-y divide-gray-200">
+                        <table class="min-w-max text-left divide-y divide-gray-200">
                                <thead class="bg-gray-50 border-b border-gray-200">
                                    <tr>
-                                       <th class="p-4 font-semibold text-gray-600 whitespace-nowrap">Name</th>
-                                       <th class="p-4 font-semibold text-gray-600 whitespace-nowrap">Email</th>
-                                       <th class="p-4 font-semibold text-gray-600 whitespace-nowrap">Phone</th>
-                                       <th class="p-4 font-semibold text-gray-600 text-right whitespace-nowrap">Actions</th>
-                                   </tr>
+                                       <th class="p-4 font-semibold text-gray-600 whitespace-nowrap">Name</th> <th class="p-4 font-semibold text-gray-600 whitespace-nowrap">Email</th> <th class="p-4 font-semibold text-gray-600 whitespace-nowrap">Phone</th> <th class="p-4 font-semibold text-gray-600 text-right whitespace-nowrap">Actions</th> </tr>
                                </thead>
                                <tbody>
                                    ${customers.length === 0 ? `<tr><td colspan="4" class="text-center p-8 text-gray-500">No customers saved yet.</td></tr>` : ''}
                                    ${customers.map(c => `
                                        <tr class="border-b border-gray-200 last:border-b-0 hover:bg-yellow-50/50">
-                                           <td class="p-4 font-medium whitespace-nowrap">${c.name}</td>
-                                           <td class="p-4 text-gray-600 whitespace-nowrap">${c.email || 'N/A'}</td>
-                                           <td class="p-4 text-gray-600 whitespace-nowrap">${c.phone || 'N/A'}</td>
-                                           <td class="p-4 space-x-2 text-right whitespace-nowrap">
+                                           <td class="p-4 font-medium whitespace-nowrap">${c.name}</td> <td class="p-4 text-gray-600 whitespace-nowrap">${c.email || 'N/A'}</td> <td class="p-4 text-gray-600 whitespace-nowrap">${c.phone || 'N/A'}</td> <td class="p-4 space-x-2 text-right whitespace-nowrap">
                                                <button class="edit-customer-btn p-2 rounded-md hover:bg-gray-200" data-id="${c.id}" title="Edit"><svg class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
                                                <button class="delete-customer-btn p-2 rounded-md hover:bg-gray-200" data-id="${c.id}" title="Delete"><svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
                                            </td>
@@ -554,14 +528,11 @@
             });
 
             views.reports.innerHTML = `
-                <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                    <h2 class="text-2xl font-bold text-gray-700">Sales Dashboard</h2>
-                    <div class="relative w-full sm:w-auto">
-                        <input type="text" id="report-search-input" placeholder="Search by Sales ID or Name..." class="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm" value="${reportSearchTerm}">
-                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                <div class="flex justify-between items-center mb-6 gap-4"> <h2 class="text-2xl font-bold text-gray-700">Sales Dashboard</h2>
+                    <div class="relative w-auto"> <input type="text" id="report-search-input" placeholder="Search by Sales ID or Name..." class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm" value="${reportSearchTerm}"> <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="grid grid-cols-4 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-sm font-medium text-gray-500">Total Revenue</h3><p class="text-3xl font-bold text-yellow-500 mt-1">₱${totalRevenue.toFixed(2)}</p></div>
                     <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-sm font-medium text-gray-500">Total Sales</h3><p class="text-3xl font-bold text-yellow-500 mt-1">${sales.length}</p></div>
                     <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-sm font-medium text-gray-500">Pending Orders</h3><p class="text-3xl font-bold text-yellow-500 mt-1">${sales.filter(s => s.status === 'Pending').length}</p></div>
@@ -570,34 +541,26 @@
 
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                     <h3 class="p-4 text-lg font-semibold text-gray-700 border-b">Order History & Status</h3>
-                    <div class="overflow-x-auto"> <table class="min-w-full text-left divide-y divide-gray-200">
+                    <div class="overflow-x-auto"> <table class="min-w-max text-left divide-y divide-gray-200">
                             <thead class="bg-gray-50 text-sm text-gray-600">
                                 <tr>
-                                    <th class="p-3 whitespace-nowrap">Sales ID</th>
-                                    <th class="p-3 whitespace-nowrap">Date</th>
-                                    <th class="p-3 whitespace-nowrap">Customer</th>
-                                    <th class="p-3 whitespace-nowrap">Total</th>
-                                    <th class="p-3 whitespace-nowrap">Status</th>
-                                    <th class="p-3 whitespace-nowrap">Actions</th>
-                                </tr>
+                                    <th class="p-3 whitespace-nowrap">Sales ID</th> <th class="p-3 whitespace-nowrap">Date</th> <th class="p-3 whitespace-nowrap">Customer</th> <th class="p-3 whitespace-nowrap">Total</th> <th class="p-3 whitespace-nowrap">Status</th> <th class="p-3 whitespace-nowrap">Actions</th> </tr>
                             </thead>
                             <tbody>
                                 ${filteredSales.length === 0 ? `<tr><td colspan="6" class="text-center p-8 text-gray-500">No sales records found.</td></tr>` : ''}
                                 ${filteredSales.map(s => `
                                     <tr class="border-t">
-                                        <td class="p-3 font-mono text-xs whitespace-nowrap">
-                                            <div class="flex items-center gap-2">
+                                        <td class="p-3 font-mono text-xs whitespace-nowrap"> <div class="flex items-center gap-2">
                                                 <span>${s.salesId || 'N/A'}</span>
                                                 <button class="copy-sales-id-btn p-1 text-gray-400 hover:text-blue-500" title="Copy ID" data-sales-id="${s.salesId}">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                                                 </button>
                                             </div>
                                         </td>
-                                        <td class="p-3 text-sm text-gray-500 whitespace-nowrap">${s.timestamp ? new Date(s.timestamp.toDate()).toLocaleString() : 'N/A'}</td>
-                                        <td class="p-3 font-medium whitespace-nowrap">${s.customerName || 'N/A'}</td>
-                                        <td class="p-3 font-semibold whitespace-nowrap">₱${s.total.toFixed(2)}</td>
-                                        <td class="p-3 whitespace-nowrap">
-                                            <select class="status-select text-sm rounded-md border-gray-300 shadow-sm focus:border-yellow-300 focus:ring focus:ring-yellow-200 focus:ring-opacity-50" data-sale-id="${s.id}">
+                                        <td class="p-3 text-sm text-gray-500 whitespace-nowrap"> ${s.timestamp ? new Date(s.timestamp.toDate()).toLocaleString() : 'N/A'}
+                                        </td>
+                                        <td class="p-3 font-medium whitespace-nowrap">${s.customerName || 'N/A'}</td> <td class="p-3 font-semibold whitespace-nowrap">₱${s.total.toFixed(2)}</td> <td class="p-3 whitespace-nowrap">
+                                            <select class="status-select text-sm rounded-md border-gray-300 shadow-sm focus:border-yellow-300 focus:ring focus:ring-yellow-200 focus:ring-opacity-50">
                                                 <option value="Pending" ${s.status === 'Pending' ? 'selected' : ''}>Pending</option>
                                                 <option value="In Production" ${s.status === 'In Production' ? 'selected' : ''}>In Production</option>
                                                 <option value="Completed" ${s.status === 'Completed' ? 'selected' : ''}>Completed</option>
@@ -627,6 +590,7 @@
                 renderReportsView();
             });
         }
+
 
         // --- Core Logic & Handlers ---
 
@@ -896,7 +860,7 @@
                 if (customer) {
                     document.getElementById('customer-modal-title').textContent = "Edit Customer";
                     form.querySelector('#customer-id').value = customerId;
-                    form.querySelector('#customer-name').value = customer.name;
+                    document.getElementById('customer-name').value = customer.name;
                     document.getElementById('customer-email').value = customer.email || '';
                     document.getElementById('customer-phone').value = customer.phone || '';
                 }
@@ -1002,7 +966,9 @@
             const headerLogo = document.getElementById('header-logo');
             if (headerLogo) {
                 headerLogo.src = PERMANENT_LOGO_URL;
-                headerLogo.classList.remove('hidden'); // Ensure it's visible
+                // The 'hidden' class on the img tag is initially set in HTML
+                // We remove it here to make the logo visible once the URL is set.
+                headerLogo.classList.remove('hidden');
                 headerLogo.setAttribute('alt', "Ellen's Creations Logo"); // Ensure alt text is meaningful
             }
         }
