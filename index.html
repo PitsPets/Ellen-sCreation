@@ -4,21 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ellen's Creations - POS System</title>
-    
-    <!-- Add a favicon to prevent the 404 error -->
+
     <link rel="icon" href="https://i.ibb.co/LzbQ8TJ/386471846-165581799940367-5700032273973764961-n-1.jpg">
 
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- html2canvas for downloading receipt as image -->
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
-    <!-- Google Fonts for a custom look -->
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
-    
+
     <style>
         /* Custom styles to apply the new theme */
         body {
@@ -92,7 +88,7 @@
             body.printing * {
                 visibility: hidden;
             }
-            body.printing #receipt-modal, 
+            body.printing #receipt-modal,
             body.printing #receipt-modal * {
                 visibility: visible;
             }
@@ -115,15 +111,13 @@
 </head>
 <body class="antialiased text-gray-800">
 
-    <!-- Main Application Container -->
     <div id="app" class="min-h-screen">
-        
-        <!-- Header -->
+
         <header class="bg-white/80 backdrop-blur-sm shadow-md sticky top-0 z-20 no-print">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20 flex-wrap">
                     <div id="logo-container" class="flex items-center space-x-4">
-                        <img src="https://i.ibb.co/LzbQ8TJ/386471846-165581799940367-5700032273973764961-n-1.jpg" alt="Ellen's Creations Logo" class="h-12 object-contain">
+                        <img id="header-logo" src="https://i.ibb.co/LzbQ8TJ/386471846-165581799940367-5700032273973764961-n-1.jpg" alt="Ellen's Creations Logo" class="h-12 object-contain">
                         <h1 class="font-pacifico text-3xl text-gray-800">Ellen's Creations</h1>
                     </div>
                     <nav class="flex space-x-1 sm:space-x-4">
@@ -131,26 +125,25 @@
                         <button id="nav-inventory" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Inventory</button>
                         <button id="nav-customers" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Customers</button>
                         <button id="nav-reports" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Reports</button>
+                        <button id="nav-settings" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Settings</button>
                     </nav>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content Area -->
         <main id="main-content" class="hidden container mx-auto p-4 sm:p-6 lg:p-8 no-print">
             <div id="pos-view" class="hidden"></div>
             <div id="inventory-view" class="hidden"></div>
             <div id="customers-view" class="hidden"></div>
             <div id="reports-view" class="hidden"></div>
+            <div id="settings-view" class="hidden"></div>
         </main>
-        
-        <!-- Loading State -->
+
         <div id="loading-state" class="text-center py-20 no-print">
             <p class="text-yellow-600 text-lg">Loading your beautiful creations...</p>
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mt-4"></div>
         </div>
-        
-        <!-- MODALS -->
+
         <div id="product-modal" class="hidden fixed inset-0 z-30 flex items-center justify-center p-4 modal-backdrop">
             <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-md">
                 <form id="product-form" class="p-8">
@@ -161,7 +154,7 @@
                         <input type="text" id="product-name" required class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Product Name">
                         <input type="number" id="product-price" required min="0" step="0.01" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Price (₱)">
                         <input type="number" id="product-stock" required min="0" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500" placeholder="Stock Quantity">
-                         <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-4">
                             <img id="image-preview" class="w-16 h-16 rounded-lg object-cover border-2 border-gray-200" src="https://placehold.co/100x100/FEFCE8/CBD5E1?text=Preview">
                             <div class="flex-grow">
                                 <label for="product-image-upload" class="file-input-label block w-full text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
@@ -174,8 +167,8 @@
                     <div class="mt-8 flex justify-end space-x-3">
                         <button type="button" class="cancel-modal-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">Cancel</button>
                         <button type="submit" id="save-product-btn" class="px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors flex items-center">
-                           <span id="save-product-text">Save Product</span>
-                           <div id="save-product-loader" class="hidden animate-spin rounded-full h-5 w-5 border-b-2 border-black ml-2"></div>
+                            <span id="save-product-text">Save Product</span>
+                            <div id="save-product-loader" class="hidden animate-spin rounded-full h-5 w-5 border-b-2 border-black ml-2"></div>
                         </button>
                     </div>
                 </form>
@@ -199,12 +192,12 @@
                 </form>
             </div>
         </div>
-        
+
         <div id="checkout-modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 modal-backdrop">
             <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-lg">
                 <form id="checkout-form" class="p-8">
-                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Finalize Order</h2>
-                     <div class="space-y-4">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Finalize Order</h2>
+                    <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Customer</label>
                             <select id="checkout-customer" class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm"><option value="">Select Customer</option></select>
@@ -219,32 +212,31 @@
                             <label class="block text-sm font-medium text-gray-700">Order Notes</label>
                             <textarea id="checkout-notes" class="mt-1 w-full border-gray-300 rounded-lg shadow-sm"></textarea>
                         </div>
-                     </div>
-                     <div class="mt-8 flex justify-end space-x-3">
+                    </div>
+                    <div class="mt-8 flex justify-end space-x-3">
                         <button type="button" class="cancel-modal-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
                         <button type="submit" id="confirm-checkout-btn" class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Confirm Sale</button>
                     </div>
                 </form>
             </div>
         </div>
-        
+
         <div id="receipt-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
             <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-sm">
-                 <div id="receipt-content-wrapper" class="p-6">
-                    <!-- Receipt content will be injected here -->
-                 </div>
-                 <div class="p-6 pt-0 flex space-x-2 no-print">
-                    <button id="download-receipt-btn" class="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">Download</button>
-                    <button id="print-receipt-btn" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">Print</button>
-                    <button id="close-receipt-modal" class="w-full px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors">Close</button>
-                 </div>
+                    <div id="receipt-content-wrapper" class="p-6">
+                        </div>
+                    <div class="p-6 pt-0 flex space-x-2 no-print">
+                        <button id="download-receipt-btn" class="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">Download</button>
+                        <button id="print-receipt-btn" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">Print</button>
+                        <button id="close-receipt-modal" class="w-full px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors">Close</button>
+                    </div>
             </div>
         </div>
-        
+
         <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
             <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
                 <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100">
-                     <svg class="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    <svg class="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                 </div>
                 <h3 id="confirm-modal-title" class="text-xl font-semibold text-gray-800 mt-4">Are you sure?</h3>
                 <p id="confirm-modal-text" class="text-gray-600 my-2">This action cannot be undone.</p>
@@ -260,15 +252,15 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, runTransaction, setDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js"; // ADDED Storage Imports
+
         // --- App Configuration & State---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pos-app';
-        
+
         const firebaseConfig = {
             apiKey: "AIzaSyCzq9xJvubPS3u3-FW9EamNfZMt-8BDmzE",
             authDomain: "ellen-s-creation.firebaseapp.com",
@@ -280,11 +272,14 @@
         };
 
         let db, auth, userId = null;
+        let storage = null; // ADDED: Firebase Storage instance
+        let appSettings = {}; // ADDED: To store application-wide settings like logo URL
         let products = [], sales = [], customers = [];
         let cart = [];
         let currentView = 'pos';
         let reportSearchTerm = '';
         let productsUnsubscribe, salesUnsubscribe, customersUnsubscribe = null;
+        let settingsUnsubscribe = null; // ADDED: Unsubscribe for settings listener
         let resolveConfirm;
 
         // --- UI Element Groups ---
@@ -293,12 +288,14 @@
             inventory: document.getElementById('inventory-view'),
             customers: document.getElementById('customers-view'),
             reports: document.getElementById('reports-view'),
+            settings: document.getElementById('settings-view'), // ADDED: Settings view
         };
         const navTabs = {
             pos: document.getElementById('nav-pos'),
             inventory: document.getElementById('nav-inventory'),
             customers: document.getElementById('nav-customers'),
             reports: document.getElementById('nav-reports'),
+            settings: document.getElementById('nav-settings'), // ADDED: Settings navigation tab
         };
         const modals = {
             product: document.getElementById('product-modal'),
@@ -307,7 +304,7 @@
             receipt: document.getElementById('receipt-modal'),
             confirm: document.getElementById('confirm-modal')
         };
-        
+
         // --- Firebase Initialization and Auth ---
         async function initializeFirebase() {
             if (!firebaseConfig || !firebaseConfig.projectId) {
@@ -318,7 +315,8 @@
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                
+                storage = getStorage(app); // INITIALIZE STORAGE
+
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         userId = user.uid;
@@ -326,6 +324,7 @@
                         document.getElementById('loading-state').classList.add('hidden');
                         document.getElementById('main-content').classList.remove('hidden');
                         switchView(currentView);
+                        updateHeaderLogo(); // Ensure logo is updated on auth state change
                     } else {
                         try {
                             await signInAnonymously(auth);
@@ -341,7 +340,7 @@
                 showToast("Could not connect to the database.", 'error');
             }
         }
-        
+
         // --- Data Listeners ---
         async function setupDataListeners() {
             if (!userId) return;
@@ -349,6 +348,7 @@
             if (productsUnsubscribe) productsUnsubscribe();
             if (salesUnsubscribe) salesUnsubscribe();
             if (customersUnsubscribe) customersUnsubscribe();
+            if (settingsUnsubscribe) settingsUnsubscribe(); // ADDED: Unsubscribe previous settings listener
 
             const productsRef = collection(db, 'artifacts', appId, 'users', userId, 'products');
             productsUnsubscribe = onSnapshot(productsRef, snapshot => {
@@ -356,7 +356,7 @@
                 products.sort((a, b) => a.name.localeCompare(b.name));
                 renderCurrentView();
             }, err => console.error("Product listener error:", err));
-            
+
             const salesRef = collection(db, 'artifacts', appId, 'users', userId, 'sales');
             const salesQuery = query(salesRef, orderBy("timestamp", "desc"));
             salesUnsubscribe = onSnapshot(salesQuery, snapshot => {
@@ -370,6 +370,18 @@
                 customers.sort((a,b) => a.name.localeCompare(b.name));
                 renderCurrentView();
             }, err => console.error("Customer listener error:", err));
+
+            // ADDED: Listener for app settings (e.g., logo URL)
+            const settingsDocRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'app_config');
+            settingsUnsubscribe = onSnapshot(settingsDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    appSettings = docSnap.data();
+                } else {
+                    appSettings = {}; // No settings yet
+                }
+                updateHeaderLogo(); // Update the logo in the header immediately
+                renderCurrentView(); // Re-render current view in case it uses settings
+            }, err => console.error("Settings listener error:", err));
         }
 
         // --- View Rendering ---
@@ -380,6 +392,7 @@
                 case 'inventory': renderInventoryView(); break;
                 case 'customers': renderCustomersView(); break;
                 case 'reports': renderReportsView(); break;
+                case 'settings': renderSettingsView(); break; // ADDED: Render Settings View
             }
         }
 
@@ -411,7 +424,7 @@
                 }
             });
         }
-        
+
         function renderCart() {
             const cartContainer = document.getElementById('cart-container');
             if (!cartContainer) return;
@@ -441,13 +454,13 @@
                     <button id="clear-cart-btn" class="w-full py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 ${cart.length === 0 ? 'opacity-50' : ''}" ${cart.length === 0 ? 'disabled' : ''}>Clear</button>
                     <button id="checkout-btn" class="w-full py-3 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 ${cart.length === 0 ? 'opacity-50' : ''}" ${cart.length === 0 ? 'disabled' : ''}>Checkout</button>
                 </div>`;
-            
+
             cartContainer.querySelector('#clear-cart-btn')?.addEventListener('click', clearCart);
             cartContainer.querySelector('#checkout-btn')?.addEventListener('click', openCheckoutModal);
             cartContainer.querySelectorAll('.cart-remove-btn').forEach(btn => btn.addEventListener('click', e => removeFromCart(parseInt(e.currentTarget.dataset.index))));
         }
-        
-        function renderInventoryView() { 
+
+        function renderInventoryView() {
             views.inventory.innerHTML = `
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-700">Inventory Management</h2>
@@ -505,28 +518,28 @@
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left">
-                             <thead class="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th class="p-4 font-semibold text-gray-600">Name</th>
-                                    <th class="p-4 font-semibold text-gray-600">Email</th>
-                                    <th class="p-4 font-semibold text-gray-600">Phone</th>
-                                    <th class="p-4 font-semibold text-gray-600 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${customers.length === 0 ? `<tr><td colspan="4" class="text-center p-8 text-gray-500">No customers saved yet.</td></tr>` : ''}
-                                ${customers.map(c => `
-                                    <tr class="border-b border-gray-200 last:border-b-0 hover:bg-yellow-50/50">
-                                        <td class="p-4 font-medium">${c.name}</td>
-                                        <td class="p-4 text-gray-600">${c.email || 'N/A'}</td>
-                                        <td class="p-4 text-gray-600">${c.phone || 'N/A'}</td>
-                                        <td class="p-4 space-x-2 text-right">
-                                            <button class="edit-customer-btn p-2 rounded-md hover:bg-gray-200" data-id="${c.id}" title="Edit"><svg class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
-                                            <button class="delete-customer-btn p-2 rounded-md hover:bg-gray-200" data-id="${c.id}" title="Delete"><svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
-                                        </td>
+                                <thead class="bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                        <th class="p-4 font-semibold text-gray-600">Name</th>
+                                        <th class="p-4 font-semibold text-gray-600">Email</th>
+                                        <th class="p-4 font-semibold text-gray-600">Phone</th>
+                                        <th class="p-4 font-semibold text-gray-600 text-right">Actions</th>
                                     </tr>
-                                `).join('')}
-                            </tbody>
+                                </thead>
+                                <tbody>
+                                    ${customers.length === 0 ? `<tr><td colspan="4" class="text-center p-8 text-gray-500">No customers saved yet.</td></tr>` : ''}
+                                    ${customers.map(c => `
+                                        <tr class="border-b border-gray-200 last:border-b-0 hover:bg-yellow-50/50">
+                                            <td class="p-4 font-medium">${c.name}</td>
+                                            <td class="p-4 text-gray-600">${c.email || 'N/A'}</td>
+                                            <td class="p-4 text-gray-600">${c.phone || 'N/A'}</td>
+                                            <td class="p-4 space-x-2 text-right">
+                                                <button class="edit-customer-btn p-2 rounded-md hover:bg-gray-200" data-id="${c.id}" title="Edit"><svg class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                                                <button class="delete-customer-btn p-2 rounded-md hover:bg-gray-200" data-id="${c.id}" title="Delete"><svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
                         </table>
                     </div>
                 </div>
@@ -541,7 +554,7 @@
             const filteredSales = sales.filter(sale => {
                 const searchTermLower = reportSearchTerm.toLowerCase();
                 if (!searchTermLower) return true;
-                return (sale.salesId?.toLowerCase().includes(searchTermLower) || 
+                return (sale.salesId?.toLowerCase().includes(searchTermLower) ||
                         sale.customerName?.toLowerCase().includes(searchTermLower));
             });
 
@@ -620,7 +633,68 @@
                 renderReportsView();
             });
         }
-        
+
+        // ADDED: Settings View Rendering
+        function renderSettingsView() {
+            views.settings.innerHTML = `
+                <div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
+                    <h2 class="text-2xl font-bold text-gray-700 mb-6">Application Settings</h2>
+
+                    <div class="mb-8 p-6 border border-gray-200 rounded-xl bg-yellow-50/50">
+                        <h3 class="text-xl font-semibold text-gray-700 mb-4">Store Logo</h3>
+                        <div class="flex items-center gap-6">
+                            <img id="current-logo-preview" class="w-24 h-24 rounded-lg object-contain bg-gray-100 border-2 border-gray-300 p-1"
+                                 src="${appSettings.logoUrl || 'https://placehold.co/100x100/FEFCE8/CBD5E1?text=No+Logo'}"
+                                 alt="Current Logo">
+                            <div>
+                                <label for="logo-upload" class="file-input-label block w-full text-center px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors cursor-pointer">
+                                    <span id="logo-file-name">Upload New Logo</span>
+                                </label>
+                                <input type="file" id="logo-upload" class="file-input-hidden" accept="image/*">
+                                <button id="remove-logo-btn" class="mt-2 w-full px-4 py-2 bg-red-400 text-white rounded-lg hover:bg-red-500 transition-colors ${appSettings.logoUrl ? '' : 'hidden'}">Remove Logo</button>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-4">Upload a new logo for your shop. This will appear on receipts and the header.</p>
+                    </div>
+
+                    </div>
+            `;
+
+            // Add event listeners for the logo upload and remove button
+            const logoUploadInput = document.getElementById('logo-upload');
+            const logoFileNameSpan = document.getElementById('logo-file-name');
+            const currentLogoPreview = document.getElementById('current-logo-preview');
+            const removeLogoBtn = document.getElementById('remove-logo-btn');
+
+            logoUploadInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    logoFileNameSpan.textContent = file.name;
+                    currentLogoPreview.src = URL.createObjectURL(file); // Show instant preview
+                    await uploadLogo(file);
+                } else {
+                    logoFileNameSpan.textContent = 'Upload New Logo';
+                    // Keep existing logo if no new file selected and there was one
+                    currentLogoPreview.src = appSettings.logoUrl || 'https://placehold.co/100x100/FEFCE8/CBD5E1?text=No+Logo';
+                }
+            });
+
+            removeLogoBtn.addEventListener('click', async () => {
+                const confirmed = await showConfirmModal('Remove Logo?', 'Are you sure you want to remove your store logo? It will be replaced by the default text.');
+                if (confirmed) {
+                    await removeLogo();
+                }
+            });
+
+            // Initial state for remove button visibility
+            if (!appSettings.logoUrl) {
+                removeLogoBtn.classList.add('hidden');
+            } else {
+                removeLogoBtn.classList.remove('hidden');
+            }
+        }
+
+
         // --- Core Logic & Handlers ---
 
         function handleProductClick(productId) {
@@ -631,7 +705,7 @@
         function addToCart(item) {
             const product = products.find(p => p.id === item.productId);
             const stockInCart = cart.filter(cartItem => cartItem.productId === item.productId).reduce((sum, i) => sum + i.quantity, 0);
-            
+
             if (product.stock > stockInCart) {
                 cart.push(item);
                 renderCart();
@@ -674,7 +748,7 @@
 
             try {
                 const newSaleRef = doc(collection(db, `artifacts/${appId}/users/${userId}/sales`));
-                
+
                 await runTransaction(db, async (transaction) => {
                     const productRefs = saleData.items.map(item => doc(db, 'artifacts', appId, 'users', userId, 'products', item.productId));
                     const productDocs = await Promise.all(productRefs.map(ref => transaction.get(ref)));
@@ -693,7 +767,7 @@
                         const newStock = productDocs[i].data().stock - item.quantity;
                         transaction.update(productRef, { stock: newStock });
                     }
-                    
+
                     transaction.set(newSaleRef, saleData);
                 });
 
@@ -708,20 +782,43 @@
                 showToast(error.message || "Error processing sale.", 'error');
             }
         }
-        
+
         async function handleProductFormSubmit(e) {
             e.preventDefault();
             const saveButton = document.getElementById('save-product-btn');
             const buttonText = document.getElementById('save-product-text');
             const loader = document.getElementById('save-product-loader');
-            
+
             saveButton.disabled = true;
             buttonText.textContent = "Saving...";
             loader.classList.remove('hidden');
 
-            const id = document.getElementById('product-id').value;
-            const imageUrl = document.getElementById('product-image').value.trim();
+            const imageFile = document.getElementById('product-image-upload').files[0];
+            let imageUrl = document.getElementById('existing-image-url').value;
 
+            if (imageFile) {
+                buttonText.textContent = "Uploading...";
+                try {
+                    // Using FileReader for product images, as they might be less frequent and can be stored as Data URLs
+                    imageUrl = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = error => reject(error);
+                        reader.readAsDataURL(imageFile);
+                    });
+                } catch(error) {
+                    console.error("Error converting image file:", error);
+                    showToast("Failed to read image file.", "error");
+                    saveButton.disabled = false;
+                    buttonText.textContent = "Save Product";
+                    loader.classList.add('hidden');
+                    return;
+                }
+            }
+
+            buttonText.textContent = "Saving...";
+
+            const id = document.getElementById('product-id').value;
             const productData = {
                 name: document.getElementById('product-name').value.trim(),
                 price: parseFloat(document.getElementById('product-price').value),
@@ -801,7 +898,7 @@
                 showToast('Failed to save customer.', 'error');
             }
         }
-        
+
         async function handleDeleteCustomer(id) {
             const confirmed = await showConfirmModal('Delete Customer?', 'This will permanently delete this customer.');
             if (confirmed) {
@@ -826,6 +923,66 @@
             }
         }
 
+        // ADDED: Logo Upload/Remove Functions using Firebase Storage
+        async function uploadLogo(file) {
+            if (!file || !userId) {
+                showToast("No file selected or user not authenticated.", "error");
+                return;
+            }
+
+            showToast("Uploading logo...", "info");
+            const logoRef = ref(storage, `artifacts/${appId}/users/${userId}/branding/logo.jpg`); // Standard path for logo
+
+            try {
+                const uploadResult = await uploadBytes(logoRef, file);
+                const downloadURL = await getDownloadURL(uploadResult.ref);
+
+                const settingsDocRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'app_config');
+                // Use setDoc with { merge: true } to create the document if it doesn't exist,
+                // or just update the logoUrl field if it does.
+                await setDoc(settingsDocRef, { logoUrl: downloadURL }, { merge: true });
+
+                showToast("Logo uploaded successfully!", "success");
+                // onSnapshot for settings will handle updating `appSettings` and re-rendering
+            } catch (error) {
+                console.error("Error uploading logo:", error);
+                showToast("Failed to upload logo. Please try again.", "error");
+            }
+        }
+
+        async function removeLogo() {
+            if (!userId) {
+                showToast("User not authenticated.", "error");
+                return;
+            }
+
+            const logoRef = ref(storage, `artifacts/${appId}/users/${userId}/branding/logo.jpg`);
+
+            try {
+                showToast("Removing logo...", "info");
+                await deleteObject(logoRef); // Delete from Firebase Storage
+
+                const settingsDocRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'app_config');
+                // Use deleteField to remove the logoUrl field from the settings document
+                await updateDoc(settingsDocRef, { logoUrl: deleteField() });
+
+                showToast("Logo removed successfully!", "success");
+                // onSnapshot for settings will handle updating `appSettings` and re-rendering
+            } catch (error) {
+                // Handle cases where the file might not exist in storage but the Firestore record needs cleaning
+                if (error.code === 'storage/object-not-found') {
+                    console.warn("Logo not found in storage, but cleaning Firestore reference.");
+                    const settingsDocRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'app_config');
+                    await updateDoc(settingsDocRef, { logoUrl: deleteField() });
+                    showToast("Logo reference cleared.", "success");
+                } else {
+                    console.error("Error removing logo:", error);
+                    showToast("Failed to remove logo. Please try again.", "error");
+                }
+            }
+        }
+
+
         // --- Modal & UI Helpers ---
         function openModal(modal) { modal.classList.remove('hidden'); setTimeout(() => modal.classList.add('modal-visible'), 10); }
         function closeModal(modal) { modal.classList.remove('modal-visible'); setTimeout(() => modal.classList.add('hidden'), 300); }
@@ -833,8 +990,10 @@
         function openProductModal(productId = null) {
             const form = document.getElementById('product-form');
             form.reset();
+            document.getElementById('file-name').textContent = 'Upload a Photo';
+            document.getElementById('image-preview').src = 'https://placehold.co/100x100/FEFCE8/CBD5E1?text=Preview';
             form.querySelector('#product-id').value = '';
-            
+
             document.getElementById('product-modal-title').textContent = "Add New Creation";
             if (productId) {
                 const product = products.find(p => p.id === productId);
@@ -844,7 +1003,10 @@
                     form.querySelector('#product-name').value = product.name;
                     form.querySelector('#product-price').value = product.price;
                     form.querySelector('#product-stock').value = product.stock;
-                    form.querySelector('#product-image').value = product.image || '';
+                    if(product.image) {
+                        document.getElementById('existing-image-url').value = product.image;
+                        document.getElementById('image-preview').src = product.image;
+                    }
                 }
             }
             openModal(modals.product);
@@ -867,27 +1029,27 @@
             }
             openModal(modals.customer);
         }
-        
+
         function openCheckoutModal() {
             if (cart.length === 0) return;
             const select = document.getElementById('checkout-customer');
-            select.innerHTML = `<option value="">Walk-in Customer</option>` + 
+            select.innerHTML = `<option value="">Walk-in Customer</option>` +
                                customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             openModal(modals.checkout);
         }
-        
+
         function showReceipt(sale, isHistoricalView = false) {
             const receiptContentWrapper = document.getElementById('receipt-content-wrapper');
             const closeButton = document.getElementById('close-receipt-modal');
 
             closeButton.textContent = isHistoricalView ? "Close" : "New Order";
-            
+
             const saleDate = sale.timestamp ? (typeof sale.timestamp.toDate === 'function' ? sale.timestamp.toDate() : new Date()) : new Date();
-            const logoUrl = "https://i.ibb.co/LzbQ8TJ/386471846-165581799940367-5700032273973764961-n-1.jpg";
+            const logoUrl = appSettings.logoUrl || ''; // Use dynamic logo URL
 
             const receiptHTML = `
                 <div class="text-center p-4 border-b border-gray-200">
-                    <img src="${logoUrl}" class="h-16 mx-auto mb-2 object-contain" onerror="this.style.display='none'">
+                    ${logoUrl ? `<img src="${logoUrl}" class="h-16 mx-auto mb-2 object-contain" alt="Store Logo">` : ''}
                     <h3 class="text-2xl font-pacifico text-gray-800">Ellen's Creations</h3>
                     <p class="text-xs text-gray-500">Official Receipt</p>
                 </div>
@@ -909,7 +1071,7 @@
                         <span>TOTAL</span>
                         <span>₱${sale.total.toFixed(2)}</span>
                     </div>
-                     <div class="text-xs text-gray-600">
+                    <div class="text-xs text-gray-600">
                         <p><strong>Payment:</strong> ${sale.paymentMethod}</p>
                     </div>
                 </div>
@@ -917,7 +1079,7 @@
                     <p class="text-xs text-gray-500">Thank you for your purchase!</p>
                 </div>
             `;
-            
+
             receiptContentWrapper.innerHTML = receiptHTML;
             openModal(modals.receipt);
         }
@@ -930,7 +1092,7 @@
                 openModal(modals.confirm);
             });
         }
-        
+
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast-notification');
             const toastMessage = document.getElementById('toast-message');
@@ -959,7 +1121,24 @@
             }
             document.body.removeChild(textArea);
         }
-        
+
+        // ADDED: Function to update header logo dynamically
+        function updateHeaderLogo() {
+            const headerLogo = document.getElementById('header-logo');
+            if (headerLogo) {
+                if (appSettings.logoUrl) {
+                    headerLogo.src = appSettings.logoUrl;
+                    headerLogo.classList.remove('hidden'); // Ensure it's visible if there's a logo
+                    headerLogo.setAttribute('alt', "Store Logo"); // Update alt text
+                } else {
+                    // If no logo, hide the image and potentially show a default text or just rely on H1
+                    headerLogo.src = ''; // Clear src
+                    headerLogo.classList.add('hidden'); // Hide the image element
+                    headerLogo.setAttribute('alt', ""); // Clear alt text
+                }
+            }
+        }
+
         function switchView(viewName) {
             currentView = viewName;
             reportSearchTerm = ''; // Reset search when switching views
@@ -981,11 +1160,16 @@
             document.getElementById('product-form').addEventListener('submit', handleProductFormSubmit);
             document.getElementById('customer-form').addEventListener('submit', handleCustomerFormSubmit);
             document.getElementById('checkout-form').addEventListener('submit', e => { e.preventDefault(); handleCheckout(); });
-            document.getElementById('close-receipt-modal').addEventListener('click', () => closeModal(modals.receipt));
-            
+            document.getElementById('close-receipt-modal').addEventListener('click', () => {
+                closeModal(modals.receipt);
+                // If closing receipt after a new sale, switch to POS view
+                if (currentView !== 'reports') { // Don't change view if viewing historical receipt
+                    switchView('pos');
+                }
+            });
+
             document.getElementById('print-receipt-btn').addEventListener('click', () => {
                 document.body.classList.add('printing');
-                // Timeout to allow styles to apply before printing
                 setTimeout(() => {
                     window.print();
                 }, 100);
@@ -997,22 +1181,41 @@
 
             document.getElementById('download-receipt-btn').addEventListener('click', () => {
                 const receiptElement = document.getElementById('receipt-content-wrapper');
-                const saleId = receiptElement.querySelector('p:nth-of-type(2)').textContent.split(': ')[1];
+                const saleIdElement = receiptElement.querySelector('p:nth-of-type(2)');
+                const saleId = saleIdElement ? saleIdElement.textContent.split(': ')[1] : 'sale'; // Safely get sales ID
                 html2canvas(receiptElement, { scale: 2 }).then(canvas => {
                     const link = document.createElement('a');
-                    link.download = `receipt-${saleId || 'sale'}.jpg`;
+                    link.download = `receipt-${saleId}.jpg`;
                     link.href = canvas.toDataURL('image/jpeg', 0.9);
                     link.click();
                 });
             });
 
+            document.getElementById('product-image-upload').addEventListener('change', (e) => {
+                const fileNameSpan = document.getElementById('file-name');
+                const preview = document.getElementById('image-preview');
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        preview.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                    fileNameSpan.textContent = file.name;
+                } else {
+                    fileNameSpan.textContent = 'Upload a Photo';
+                    preview.src = 'https://placehold.co/100x100/FEFCE8/CBD5E1?text=Preview';
+                }
+            });
+
             document.getElementById('confirm-modal-cancel').addEventListener('click', () => { closeModal(modals.confirm); if (resolveConfirm) resolveConfirm(false); });
             document.getElementById('confirm-modal-confirm').addEventListener('click', () => { closeModal(modals.confirm); if (resolveConfirm) resolveConfirm(true); });
         }
-        
+
         window.addEventListener('DOMContentLoaded', () => {
             initializeFirebase();
             setupEventListeners();
+            updateHeaderLogo(); // Call on initial load to set logo based on settings
         });
     </script>
 </body>
