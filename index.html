@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ellen's Creations - POS System</title>
 
-    <link rel="icon" href="https://placehold.co/32x32/FEFCE8/CBD5E1?text=EC">
+    <link rel="icon" href="https://example.com/ellen_creations_logo.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -117,7 +117,7 @@
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20 flex-wrap">
                     <div id="logo-container" class="flex items-center space-x-4">
-                        <img id="header-logo" src="" alt="Ellen's Creations Logo" class="h-12 object-contain hidden">
+                        <img id="header-logo" src="https://example.com/ellen_creations_logo.png" alt="Ellen's Creations Logo" class="h-12 object-contain">
                         <h1 class="font-pacifico text-3xl text-gray-800">Ellen's Creations</h1>
                     </div>
                     <nav class="flex space-x-1 sm:space-x-4">
@@ -125,8 +125,7 @@
                         <button id="nav-inventory" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Inventory</button>
                         <button id="nav-customers" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Customers</button>
                         <button id="nav-reports" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Reports</button>
-                        <button id="nav-settings" class="nav-tab text-sm sm:text-base py-2 px-2 sm:px-3 border-b-2 transition-colors duration-300">Settings</button>
-                    </nav>
+                        </nav>
                 </div>
             </div>
         </header>
@@ -136,8 +135,7 @@
             <div id="inventory-view" class="hidden"></div>
             <div id="customers-view" class="hidden"></div>
             <div id="reports-view" class="hidden"></div>
-            <div id="settings-view" class="hidden"></div>
-        </main>
+            </main>
 
         <div id="loading-state" class="text-center py-20 no-print">
             <p class="text-yellow-600 text-lg">Loading your beautiful creations...</p>
@@ -254,15 +252,15 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, runTransaction, setDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp, query, orderBy, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+        // REMOVED: Firebase Storage imports as they are no longer needed
+        // import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // --- App Configuration & State---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-pos-app';
 
-        // !! IMPORTANT: THIS IS YOUR PROVIDED FIREBASE CONFIGURATION !!
-        // It has been correctly inserted here.
+        // YOUR PROVIDED FIREBASE CONFIGURATION - THIS IS NOW CORRECTLY PLACED
         const firebaseConfig = {
             apiKey: "AIzaSyCzq9xJvubPS3u3-FW9EamNfZMt-8BDmzE",
             authDomain: "ellen-s-creation.firebaseapp.com",
@@ -273,16 +271,20 @@
             measurementId: "G-8WPR5J0F5M"
         };
 
+        // --- Hardcoded Logo URL ---
+        // REPLACE THIS URL WITH THE PERMANENT URL OF YOUR LOGO
+        const PERMANENT_LOGO_URL = "https://example.com/ellen_creations_logo.png";
+
 
         let db, auth, userId = null;
-        let storage = null; // ADDED: Firebase Storage instance
-        let appSettings = {}; // ADDED: To store application-wide settings like logo URL
+        // REMOVED: storage variable
+        // REMOVED: appSettings variable - no longer dynamic
         let products = [], sales = [], customers = [];
         let cart = [];
         let currentView = 'pos';
         let reportSearchTerm = '';
         let productsUnsubscribe, salesUnsubscribe, customersUnsubscribe = null;
-        let settingsUnsubscribe = null; // ADDED: Unsubscribe for settings listener
+        // REMOVED: settingsUnsubscribe - no longer needed
         let resolveConfirm;
 
         // --- UI Element Groups ---
@@ -291,18 +293,18 @@
             inventory: document.getElementById('inventory-view'),
             customers: document.getElementById('customers-view'),
             reports: document.getElementById('reports-view'),
-            settings: document.getElementById('settings-view'), // ADDED: Settings view
+            // REMOVED: settings view
         };
         const navTabs = {
             pos: document.getElementById('nav-pos'),
             inventory: document.getElementById('nav-inventory'),
             customers: document.getElementById('nav-customers'),
             reports: document.getElementById('nav-reports'),
-            settings: document.getElementById('nav-settings'), // ADDED: Settings navigation tab
+            // REMOVED: settings navigation tab
         };
         const modals = {
             product: document.getElementById('product-modal'),
-            customer: document.getElementById('customer-modal'), // FIXED: Syntax error here
+            customer: document.getElementById('customer-modal'), // FIXED: Syntax error corrected
             checkout: document.getElementById('checkout-modal'),
             receipt: document.getElementById('receipt-modal'),
             confirm: document.getElementById('confirm-modal')
@@ -310,8 +312,7 @@
 
         // --- Firebase Initialization and Auth ---
         async function initializeFirebase() {
-            // Simplified check, assuming the provided config is complete.
-            // A more robust check might verify each field.
+            // Check if Firebase config is minimally present.
             if (!firebaseConfig.projectId || !firebaseConfig.apiKey) {
                 showToast("Firebase configuration is incomplete. Please ensure projectId and apiKey are set.", 'error');
                 document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-lg p-4"><b>Configuration Error:</b> Your Firebase configuration is incomplete. Please check the script section.</p>`;
@@ -321,7 +322,7 @@
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                storage = getStorage(app); // INITIALIZE STORAGE
+                // REMOVED: storage initialization
 
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
@@ -330,7 +331,7 @@
                         document.getElementById('loading-state').classList.add('hidden');
                         document.getElementById('main-content').classList.remove('hidden');
                         switchView(currentView);
-                        updateHeaderLogo(); // Ensure logo is updated on auth state change
+                        updateHeaderLogo(); // Ensure logo is visible on auth state change
                     } else {
                         try {
                             await signInAnonymously(auth);
@@ -355,7 +356,7 @@
             if (productsUnsubscribe) productsUnsubscribe();
             if (salesUnsubscribe) salesUnsubscribe();
             if (customersUnsubscribe) customersUnsubscribe();
-            if (settingsUnsubscribe) settingsUnsubscribe();
+            // REMOVED: settingsUnsubscribe as there are no dynamic settings listeners anymore
 
             const productsRef = collection(db, 'artifacts', appId, 'users', userId, 'products');
             productsUnsubscribe = onSnapshot(productsRef, snapshot => {
@@ -378,17 +379,7 @@
                 renderCurrentView();
             }, err => console.error("Customer listener error:", err));
 
-            // ADDED: Listener for app settings (e.g., logo URL)
-            const settingsDocRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'app_config');
-            settingsUnsubscribe = onSnapshot(settingsDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    appSettings = docSnap.data();
-                } else {
-                    appSettings = {}; // No settings yet
-                }
-                updateHeaderLogo(); // Update the logo in the header immediately
-                renderCurrentView(); // Re-render current view in case it uses settings
-            }, err => console.error("Settings listener error:", err));
+            // REMOVED: Listener for app settings (no dynamic settings)
         }
 
         // --- View Rendering ---
@@ -399,7 +390,7 @@
                 case 'inventory': renderInventoryView(); break;
                 case 'customers': renderCustomersView(); break;
                 case 'reports': renderReportsView(); break;
-                case 'settings': renderSettingsView(); break; // ADDED: Render Settings View
+                // REMOVED: settings view rendering
             }
         }
 
@@ -641,120 +632,9 @@
             });
         }
 
-        // ADDED: Settings View Rendering
-        function renderSettingsView() {
-            views.settings.innerHTML = `
-                <div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
-                    <h2 class="text-2xl font-bold text-gray-700 mb-6">Application Settings</h2>
-
-                    <div class="mb-8 p-6 border border-gray-200 rounded-xl bg-yellow-50/50">
-                        <h3 class="text-xl font-semibold text-gray-700 mb-4">Store Logo</h3>
-                        <form id="logo-settings-form"> <div class="flex items-center gap-6 mb-4">
-                                <img id="current-logo-preview" class="w-24 h-24 rounded-lg object-contain bg-gray-100 border-2 border-gray-300 p-1"
-                                     src="${appSettings.logoUrl || 'https://placehold.co/100x100/FEFCE8/CBD5E1?text=No+Logo'}"
-                                     alt="Current Logo">
-                                <div class="flex-grow">
-                                    <label for="logo-upload" class="file-input-label block w-full text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer">
-                                        <span id="logo-file-name">Select New Logo</span>
-                                    </label>
-                                    <input type="file" id="logo-upload" class="file-input-hidden" accept="image/*">
-                                </div>
-                            </div>
-                            <div class="flex justify-end space-x-3 mt-4">
-                                <button type="button" id="remove-logo-btn" class="px-4 py-2 bg-red-400 text-white rounded-lg hover:bg-red-500 transition-colors ${appSettings.logoUrl ? '' : 'hidden'}">Remove Logo</button>
-                                <button type="submit" id="save-logo-btn" class="px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition-colors flex items-center">
-                                    <span id="save-logo-text">Save Logo</span>
-                                    <div id="save-logo-loader" class="hidden animate-spin rounded-full h-5 w-5 border-b-2 border-black ml-2"></div>
-                                </button>
-                            </div>
-                        </form>
-                        <p class="text-sm text-gray-500 mt-4">Upload a new logo for your shop. This will appear on receipts and the header.</p>
-                    </div>
-
-                    </div>
-            `;
-
-            // Get elements for logo section
-            const logoSettingsForm = document.getElementById('logo-settings-form'); // Get the new form
-            const logoUploadInput = document.getElementById('logo-upload');
-            const logoFileNameSpan = document.getElementById('logo-file-name');
-            const currentLogoPreview = document.getElementById('current-logo-preview');
-            const removeLogoBtn = document.getElementById('remove-logo-btn');
-            const saveLogoBtn = document.getElementById('save-logo-btn'); // Get the new save button
-            const saveLogoText = document.getElementById('save-logo-text');
-            const saveLogoLoader = document.getElementById('save-logo-loader');
-
-            let selectedLogoFile = null; // Variable to hold the selected file until 'Save' is clicked
-
-            // Event listener for file selection (previews but doesn't upload yet)
-            logoUploadInput.addEventListener('change', (e) => {
-                selectedLogoFile = e.target.files[0];
-                if (selectedLogoFile) {
-                    logoFileNameSpan.textContent = selectedLogoFile.name;
-                    currentLogoPreview.src = URL.createObjectURL(selectedLogoFile); // Show instant preview
-                    saveLogoBtn.disabled = false; // Enable save button if file is selected
-                } else {
-                    logoFileNameSpan.textContent = 'Select New Logo';
-                    currentLogoPreview.src = appSettings.logoUrl || 'https://placehold.co/100x100/FEFCE8/CBD5E1?text=No+Logo';
-                    selectedLogoFile = null;
-                    saveLogoBtn.disabled = true; // Disable if no file is selected
-                }
-            });
-
-            // Event listener for the new "Save Logo" button (form submission)
-            logoSettingsForm.addEventListener('submit', async (e) => {
-                e.preventDefault(); // Prevent default form submission
-
-                if (!selectedLogoFile) {
-                    showToast("Please select a logo file to upload.", "error");
-                    return;
-                }
-
-                saveLogoBtn.disabled = true;
-                saveLogoText.textContent = "Uploading...";
-                saveLogoLoader.classList.remove('hidden');
-
-                try {
-                    await uploadLogo(selectedLogoFile);
-                    selectedLogoFile = null; // Clear the selected file after successful upload
-                    logoFileNameSpan.textContent = 'Select New Logo'; // Reset label
-                    saveLogoBtn.disabled = true; // Disable button until new file is selected
-                } catch (error) {
-                    // Error handled in uploadLogo, but reset button state here too
-                    console.error("Error during logo upload via submit:", error);
-                    // Toast message is already shown by uploadLogo
-                } finally {
-                    saveLogoText.textContent = "Save Logo";
-                    saveLogoLoader.classList.add('hidden');
-                }
-            });
-
-            removeLogoBtn.addEventListener('click', async () => {
-                const confirmed = await showConfirmModal('Remove Logo?', 'Are you sure you want to remove your store logo? It will be replaced by the default text.');
-                if (confirmed) {
-                    removeLogoBtn.disabled = true; // Disable while processing
-                    try {
-                        await removeLogo();
-                        removeLogoBtn.classList.add('hidden'); // Hide after successful removal
-                        saveLogoBtn.disabled = true; // Also disable save button
-                        logoFileNameSpan.textContent = 'Select New Logo'; // Reset label
-                    } catch (error) {
-                        // Error handled in removeLogo, but re-enable button if something went wrong
-                        console.error("Error during logo removal via click:", error);
-                        removeLogoBtn.disabled = false;
-                    }
-                }
-            });
-
-            // Initial state for save and remove buttons
-            saveLogoBtn.disabled = true; // Initially disabled until a file is selected
-            if (!appSettings.logoUrl) {
-                removeLogoBtn.classList.add('hidden');
-            } else {
-                removeLogoBtn.classList.remove('hidden');
-            }
-        }
-
+        // REMOVED: renderSettingsView function
+        // REMOVED: uploadLogo function
+        // REMOVED: removeLogo function
 
         // --- Core Logic & Handlers ---
 
@@ -984,65 +864,6 @@
             }
         }
 
-        // ADDED: Logo Upload/Remove Functions using Firebase Storage
-        async function uploadLogo(file) {
-            if (!file || !userId) {
-                showToast("No file selected or user not authenticated.", "error");
-                return;
-            }
-
-            const logoRef = ref(storage, `artifacts/${appId}/users/${userId}/branding/logo.jpg`); // Standard path for logo
-
-            try {
-                const uploadResult = await uploadBytes(logoRef, file);
-                const downloadURL = await getDownloadURL(uploadResult.ref);
-
-                const settingsDocRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'app_config');
-                // Use setDoc with { merge: true } to create the document if it doesn't exist,
-                // or just update the logoUrl field if it does.
-                await setDoc(settingsDocRef, { logoUrl: downloadURL }, { merge: true });
-
-                showToast("Logo uploaded successfully!", "success");
-                // onSnapshot for settings will handle updating `appSettings` and re-rendering
-            } catch (error) {
-                console.error("Error uploading logo:", error);
-                showToast("Failed to upload logo. Please try again.", "error");
-                throw error; // Re-throw to be caught by the form submit handler's try/catch
-            }
-        }
-
-        async function removeLogo() {
-            if (!userId) {
-                showToast("User not authenticated.", "error");
-                return;
-            }
-
-            const logoRef = ref(storage, `artifacts/${appId}/users/${userId}/branding/logo.jpg`);
-
-            try {
-                await deleteObject(logoRef); // Delete from Firebase Storage
-
-                const settingsDocRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'app_config');
-                // Use deleteField to remove the logoUrl field from the settings document
-                await updateDoc(settingsDocRef, { logoUrl: deleteField() });
-
-                showToast("Logo removed successfully!", "success");
-                // onSnapshot for settings will handle updating `appSettings` and re-rendering
-            } catch (error) {
-                // Handle cases where the file might not exist in storage but the Firestore record needs cleaning
-                if (error.code === 'storage/object-not-found') {
-                    console.warn("Logo not found in storage, but cleaning Firestore reference.");
-                    const settingsDocRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'app_config');
-                    await updateDoc(settingsDocRef, { logoUrl: deleteField() });
-                    showToast("Logo reference cleared.", "success");
-                } else {
-                    console.error("Error removing logo:", error);
-                    showToast("Failed to remove logo. Please try again.", "error");
-                    throw error; // Re-throw to be caught by the button click handler if desired
-                }
-            }
-        }
-
 
         // --- Modal & UI Helpers ---
         function openModal(modal) { modal.classList.remove('hidden'); setTimeout(() => modal.classList.add('modal-visible'), 10); }
@@ -1085,7 +906,7 @@
                     form.querySelector('#customer-id').value = customerId;
                     form.querySelector('#customer-name').value = customer.name;
                     form.querySelector('#customer-email').value = customer.email || '';
-                    form.querySelector('#customer-phone').value = customer.phone || '';
+                    document.getElementById('customer-phone').value = customer.phone || ''; // Corrected getElementById
                 }
             }
             openModal(modals.customer);
@@ -1106,7 +927,8 @@
             closeButton.textContent = isHistoricalView ? "Close" : "New Order";
 
             const saleDate = sale.timestamp ? (typeof sale.timestamp.toDate === 'function' ? sale.timestamp.toDate() : new Date()) : new Date();
-            const logoUrl = appSettings.logoUrl || ''; // Use dynamic logo URL
+            // Using the hardcoded permanent logo URL
+            const logoUrl = PERMANENT_LOGO_URL;
 
             const receiptHTML = `
                 <div class="text-center p-4 border-b border-gray-200">
@@ -1183,20 +1005,13 @@
             document.body.removeChild(textArea);
         }
 
-        // ADDED: Function to update header logo dynamically
+        // Modified: Function to set header logo from the hardcoded URL
         function updateHeaderLogo() {
             const headerLogo = document.getElementById('header-logo');
             if (headerLogo) {
-                if (appSettings.logoUrl) {
-                    headerLogo.src = appSettings.logoUrl;
-                    headerLogo.classList.remove('hidden'); // Ensure it's visible if there's a logo
-                    headerLogo.setAttribute('alt', "Store Logo"); // Update alt text
-                } else {
-                    // If no logo, hide the image and just rely on H1
-                    headerLogo.src = ''; // Clear src
-                    headerLogo.classList.add('hidden'); // Hide the image element
-                    headerLogo.setAttribute('alt', ""); // Clear alt text
-                }
+                headerLogo.src = PERMANENT_LOGO_URL;
+                headerLogo.classList.remove('hidden'); // Ensure it's visible
+                headerLogo.setAttribute('alt', "Ellen's Creations Logo"); // Ensure alt text is meaningful
             }
         }
 
@@ -1276,7 +1091,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             initializeFirebase();
             setupEventListeners();
-            updateHeaderLogo(); // Call on initial load to set logo based on settings
+            updateHeaderLogo(); // Call on initial load to set logo from the hardcoded URL
         });
     </script>
 </body>
